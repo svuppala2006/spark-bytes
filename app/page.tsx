@@ -1,76 +1,10 @@
-// import Image from "next/image";
-
-// export default function Home() {
-//   return (
-//     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-//       <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-//         <Image
-//           className="dark:invert"
-//           src="/next.svg"
-//           alt="Next.js logo"
-//           width={100}
-//           height={20}
-//           priority
-//         />
-//         <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-//           <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-//             To get started, edit the page.tsx file.
-//           </h1>
-//           <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-//             Looking for a starting point or more instructions? Head over to{" "}
-//             <a
-//               href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-//               className="font-medium text-zinc-950 dark:text-zinc-50"
-//             >
-//               Templates
-//             </a>{" "}
-//             or the{" "}
-//             <a
-//               href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-//               className="font-medium text-zinc-950 dark:text-zinc-50"
-//             >
-//               Learning
-//             </a>{" "}
-//             center.
-//           </p>
-//         </div>
-//         <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-//           <a
-//             className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-//             href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-//             target="_blank"
-//             rel="noopener noreferrer"
-//           >
-//             <Image
-//               className="dark:invert"
-//               src="/vercel.svg"
-//               alt="Vercel logomark"
-//               width={16}
-//               height={16}
-//             />
-//             Deploy Now
-//           </a>
-//           <a
-//             className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-//             href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-//             target="_blank"
-//             rel="noopener noreferrer"
-//           >
-//             Documentation
-//           </a>
-//         </div>
-//       </main>
-//     </div>
-//   );
-// }
-
 "use client";
 
 import { ArrowRight, Search, MapPin, Utensils, Leaf, Users, Calendar, TrendingUp } from 'lucide-react';
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Button } from "./components/ui/button";
 import { Card } from "./components/ui/card";
-import { ImageWithFallback } from "./components/figma/ImageWithFallback";
 
 export default function Page() {
   const router = useRouter();
@@ -83,51 +17,161 @@ export default function Page() {
   ];
 
   const steps = [
-    { number: '01', title: 'Browse Events', description: 'Search for campus events with leftover food.', icon: Search },
-    { number: '02', title: 'Find Your Food', description: 'View available items and pickup details.', icon: MapPin },
-    { number: '03', title: 'Claim & Enjoy', description: 'Grab your food and enjoy.', icon: Utensils },
+    {
+      number: '01',
+      title: 'Browse Events',
+      description: 'Search for campus events with leftover food.',
+      icon: Search,
+    },
+    {
+      number: '02',
+      title: 'Find Your Food',
+      description: 'View available food items, locations, and pickup times.',
+      icon: MapPin,
+    },
+    {
+      number: '03',
+      title: 'Claim & Enjoy',
+      description: 'Pick up and enjoy delicious food.',
+      icon: Utensils,
+    },
   ];
 
   const benefits = [
-    { icon: Leaf, title: 'Reduce Food Waste', description: 'Make BU more sustainable.' },
-    { icon: Utensils, title: 'Free Food', description: 'Save money and eat well.' },
-    { icon: Users, title: 'Build Community', description: 'Connect with other students.' },
+    { icon: Leaf, title: 'Reduce Food Waste', description: 'Help BU become more sustainable.' },
+    { icon: Utensils, title: 'Free Food', description: 'Save money while enjoying great meals.' },
+    { icon: Users, title: 'Build Community', description: 'Connect with fellow Terriers.' },
   ];
 
   const featuredEvents = [
     {
       id: 1,
       name: 'CS Department Symposium',
-      location: 'Photonics Center',
+      location: 'Photonics Center, 8th Floor',
       foodItems: ['Pizza', 'Salad', 'Cookies'],
       image: 'https://images.unsplash.com/photo-1579178404017-47844de5ca6a',
       time: 'Today, 4:00 PM',
+    },
+    {
+      id: 2,
+      name: 'Graduate Student Mixer',
+      location: 'GSU, 2nd Floor Lounge',
+      foodItems: ['Sandwiches', 'Fruit', 'Chips'],
+      image: 'https://images.unsplash.com/photo-1758432370137-bda5e8a097b0',
+      time: 'Tomorrow, 1:00 PM',
+    },
+    {
+      id: 3,
+      name: 'Engineering Seminar',
+      location: 'ENG Building, Room 245',
+      foodItems: ['Bagels', 'Coffee', 'Pastries'],
+      image: 'https://images.unsplash.com/photo-1638241906516-32462a8e35bb',
+      time: 'Tomorrow, 10:00 AM',
     },
   ];
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero */}
-      <section className="px-8 py-24">
-        <h1 className="text-4xl font-bold mb-4">Never Let Campus Food Go to Waste</h1>
-        <p className="text-lg text-gray-600 mb-8">
-          TerrierBytes connects Boston University students with leftover food.
-        </p>
-        <Button size="lg" onClick={() => router.push("/search")}>
-          Browse Events <ArrowRight className="ml-2 h-5 w-5" />
-        </Button>
+
+      {/* HERO */}
+      <section className="bg-white border-b border-gray-200">
+        <div className="max-w-5xl mx-auto px-8 py-24">
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">
+            Never Let Campus Food Go to Waste
+          </h1>
+          <p className="text-gray-600 text-lg mb-8 max-w-xl">
+            TerrierBytes connects Boston University students with leftover food from campus events.
+            Save money, reduce waste, and build community—one meal at a time.
+          </p>
+          <div className="flex gap-4">
+            <Button onClick={() => router.push("/search")} size="lg" className="bg-red-600 text-white hover:bg-red-700">
+              Browse Events <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+            <Button onClick={() => router.push("/about")} size="lg" variant="outline">
+              Learn More
+            </Button>
+          </div>
+        </div>
       </section>
 
-      {/* Stats */}
-      <section className="px-8 grid grid-cols-1 md:grid-cols-4 gap-6">
-        {stats.map((s, i) => (
-          <Card key={i} className="p-6 shadow">
-            <s.icon className="h-6 w-6 text-red-600 mb-2" />
-            <div className="text-xl font-bold">{s.value}</div>
-            <div className="text-sm text-gray-600">{s.label}</div>
+      {/* STATS */}
+      <section className="max-w-6xl mx-auto px-8 py-16 grid grid-cols-1 md:grid-cols-4 gap-6">
+        {stats.map((stat, index) => (
+          <Card key={index} className="p-6 shadow bg-white">
+            <stat.icon className="h-6 w-6 text-red-600 mb-2" />
+            <div className="text-xl font-semibold">{stat.value}</div>
+            <div className="text-gray-600">{stat.label}</div>
           </Card>
         ))}
       </section>
+
+      {/* HOW IT WORKS */}
+      <section className="max-w-5xl mx-auto px-8 py-16 text-center">
+        <h2 className="text-3xl font-bold text-gray-900 mb-6">How It Works</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          {steps.map((step, i) => (
+            <div key={i} className="flex flex-col items-center text-center">
+              <div className="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center mb-4">
+                <step.icon className="h-10 w-10 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">{step.title}</h3>
+              <p className="text-gray-600 mt-2">{step.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* FEATURED EVENTS */}
+      <section className="bg-white py-16">
+        <div className="max-w-6xl mx-auto px-8">
+          <h2 className="text-3xl font-bold mb-8">Featured Events</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {featuredEvents.map(event => (
+              <Card key={event.id} className="overflow-hidden">
+
+                <div className="relative h-48 w-full">
+                  <Image src={event.image} alt={event.name} fill className="object-cover"/>
+                  <div className="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 rounded-full">
+                    {event.time}
+                  </div>
+                </div>
+                <div className="p-6">
+                  <h3 className="font-semibold text-gray-900 mb-1">{event.name}</h3>
+                  <p className="text-gray-600 flex items-center mb-4"><MapPin className="h-4 w-4 mr-2" /> {event.location}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {event.foodItems.map((item, i) => (
+                      <span key={i} className="px-3 py-1 text-sm bg-gray-100 rounded-full">{item}</span>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* BENEFITS */}
+      <section className="max-w-6xl mx-auto px-8 py-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+        {benefits.map((benefit, i) => (
+          <Card key={i} className="p-8 hover:border-red-600 transition-colors">
+            <div className="w-16 h-16 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-6">
+              <benefit.icon className="h-8 w-8 text-red-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">{benefit.title}</h3>
+            <p className="text-gray-600 mt-2">{benefit.description}</p>
+          </Card>
+        ))}
+      </section>
+
+      {/* CTA */}
+      <section className="text-center py-16 border-t bg-white">
+        <h2 className="text-3xl font-bold mb-4">Ready to Join the Movement?</h2>
+        <Button size="lg" className="bg-red-600 text-white hover:bg-red-700" onClick={() => router.push("/search")}>
+          Get Started <ArrowRight className="ml-2 h-5 w-5" />
+        </Button>
+      </section>
+
     </div>
   );
 }
