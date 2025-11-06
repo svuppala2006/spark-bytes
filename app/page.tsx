@@ -10,9 +10,9 @@ export default function Page() {
   const router = useRouter();
 
   const stats = [
-    { label: 'Events Tracked', value: '150+', icon: Calendar },
-    { label: 'Food Items Saved', value: '2,400+', icon: Utensils },
-    { label: 'Active Users', value: '800+', icon: Users },
+    { label: 'Events Tracked', value: '50+', icon: Calendar },
+    { label: 'Food Items Saved', value: '1,300+', icon: Utensils },
+    { label: 'Active Users', value: '200+', icon: Users },
     { label: 'Pounds Rescued', value: '1,200+', icon: TrendingUp },
   ];
 
@@ -31,7 +31,7 @@ export default function Page() {
     },
     {
       number: '03',
-      title: 'Claim & Enjoy',
+      title: 'Place Your Order',
       description: 'Pick up and enjoy delicious food.',
       icon: Utensils,
     },
@@ -77,15 +77,15 @@ export default function Page() {
       <section className="bg-white border-b border-gray-200">
         <div className="max-w-5xl mx-auto px-8 py-24">
           <h1 className="text-4xl font-bold text-gray-900 mb-6">
-            Never Let Campus Food Go to Waste
+            Our Mission!
           </h1>
           <p className="text-gray-600 text-lg mb-8 max-w-xl">
             TerrierBytes connects Boston University students with leftover food from campus events.
-            Save money, reduce waste, and build community—one meal at a time.
+            Save money, reduce waste, and join the community.
           </p>
           <div className="flex gap-4">
             <Button onClick={() => router.push("/search")} size="lg" className="bg-red-600 text-white hover:bg-red-700">
-              Browse Events <ArrowRight className="ml-2 h-5 w-5" />
+              Browse Events 
             </Button>
             <Button onClick={() => router.push("/about")} size="lg" variant="outline">
               Learn More
@@ -151,24 +151,11 @@ export default function Page() {
         </div>
       </section>
 
-      {/* BENEFITS */}
-      <section className="max-w-6xl mx-auto px-8 py-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-        {benefits.map((benefit, i) => (
-          <Card key={i} className="p-8 hover:border-red-600 transition-colors">
-            <div className="w-16 h-16 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-6">
-              <benefit.icon className="h-8 w-8 text-red-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900">{benefit.title}</h3>
-            <p className="text-gray-600 mt-2">{benefit.description}</p>
-          </Card>
-        ))}
-      </section>
-
       {/* CTA */}
       <section className="text-center py-16 border-t bg-white">
-        <h2 className="text-3xl font-bold mb-4">Ready to Join the Movement?</h2>
+        <h2 className="text-3xl font-bold mb-4">Ready to Join us?</h2>
         <Button size="lg" className="bg-red-600 text-white hover:bg-red-700" onClick={() => router.push("/search")}>
-          Get Started <ArrowRight className="ml-2 h-5 w-5" />
+          Get Started
         </Button>
       </section>
 
