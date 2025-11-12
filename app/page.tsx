@@ -49,7 +49,7 @@ export default function Page() {
       name: 'CS Department Symposium',
       location: 'Photonics Center, 8th Floor',
       foodItems: ['Pizza', 'Salad', 'Cookies'],
-      image: 'https://images.unsplash.com/photo-1579178404017-47844de5ca6a',
+      image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591',
       time: 'Today, 4:00 PM',
     },
     {
@@ -57,7 +57,7 @@ export default function Page() {
       name: 'Graduate Student Mixer',
       location: 'GSU, 2nd Floor Lounge',
       foodItems: ['Sandwiches', 'Fruit', 'Chips'],
-      image: 'https://images.unsplash.com/photo-1758432370137-bda5e8a097b0',
+      image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93',
       time: 'Tomorrow, 1:00 PM',
     },
     {
@@ -65,7 +65,7 @@ export default function Page() {
       name: 'Engineering Seminar',
       location: 'ENG Building, Room 245',
       foodItems: ['Bagels', 'Coffee', 'Pastries'],
-      image: 'https://images.unsplash.com/photo-1638241906516-32462a8e35bb',
+      image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085',
       time: 'Tomorrow, 10:00 AM',
     },
   ];
@@ -99,8 +99,8 @@ export default function Page() {
         {stats.map((stat, index) => (
           <Card key={index} className="p-6 shadow bg-white">
             <stat.icon className="h-6 w-6 text-red-600 mb-2" />
-            <div className="text-xl font-semibold">{stat.value}</div>
-            <div className="text-gray-600">{stat.label}</div>
+            <div className="text-xl font-semibold text-gray-900">{stat.value}</div>
+            <div className="text-gray-900">{stat.label}</div>
           </Card>
         ))}
       </section>
@@ -124,11 +124,15 @@ export default function Page() {
       {/* FEATURED EVENTS */}
       <section className="bg-white py-16">
         <div className="max-w-6xl mx-auto px-8">
-          <h2 className="text-3xl font-bold mb-8">Featured Events</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-8">Featured Events</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {featuredEvents.map(event => (
-              <Card key={event.id} className="overflow-hidden">
+              <Card
+                key={event.id}
+                className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-200"
+                onClick={() => router.push(`/events/${event.id}`)}
+              >
 
                 <div className="relative h-48 w-full">
                   <Image src={event.image} alt={event.name} fill className="object-cover"/>
@@ -138,10 +142,10 @@ export default function Page() {
                 </div>
                 <div className="p-6">
                   <h3 className="font-semibold text-gray-900 mb-1">{event.name}</h3>
-                  <p className="text-gray-600 flex items-center mb-4"><MapPin className="h-4 w-4 mr-2" /> {event.location}</p>
+                  <p className="text-gray-900 flex items-center mb-4"><MapPin className="h-4 w-4 mr-2" /> {event.location}</p>
                   <div className="flex flex-wrap gap-2">
                     {event.foodItems.map((item, i) => (
-                      <span key={i} className="px-3 py-1 text-sm bg-gray-100 rounded-full">{item}</span>
+                      <span key={i} className="px-3 py-1 text-sm bg-gray-100 text-gray-900 rounded-full">{item}</span>
                     ))}
                   </div>
                 </div>
@@ -153,7 +157,7 @@ export default function Page() {
 
       {/* CTA */}
       <section className="text-center py-16 border-t bg-white">
-        <h2 className="text-3xl font-bold mb-4">Ready to Join us?</h2>
+        <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to Join us?</h2>
         <Button size="lg" className="bg-red-600 text-white hover:bg-red-700" onClick={() => router.push("/signin")}>
           Get Started
         </Button>
