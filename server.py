@@ -65,6 +65,7 @@ class Food(BaseModel):
     stockLevel: StockLevel = StockLevel.MEDIUM
     dietaryTags: list[str] = Field(default_factory=list)
     description: Optional[str] = Field(default="")
+    event_id: int = Field(..., ge=0)
 
 
 class ReserveRequest(BaseModel):
