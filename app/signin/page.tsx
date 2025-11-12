@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import Link from 'next/link'
 
+type Role = "user" | "organizer";
+
 export default function SignIn() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [show, setShow] = useState(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
 
@@ -20,25 +21,52 @@ export default function SignIn() {
     setLoading(true)
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) setMessage(error.message)
-    else router.push('/dashboard')
+    const { data: auth } = await supabase.auth.getUser()
+    const userId = auth?.user?.id
+    let role: Role = "user";
+    if (userId) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select('role')
+        .eq("id", userId)
+        .single();
+      if (profile?.role == "organizer") role = "organizer";
+    }
+    router.replace(role == "organizer" ? "/organizer" : "/dashboard")
     setLoading(false)
   }, [email, password, router])
 
   return (
     <main>
-      <h2>Sign In</h2>
-      <div className="card">
-        <form onSubmit={onSubmit}>
-          <div className="row">
-            <input type="email" placeholder="you@example.com" value={email} onChange={e=>setEmail(e.target.value)} />
-            <input type={show ? 'text' : 'password'} placeholder="password" value={password} onChange={e=>setPassword(e.target.value)} />
-            <label><input type="checkbox" checked={show} onChange={e=>setShow(e.target.checked)} /> Show</label>
-            <button disabled={loading}>{loading ? 'Signing in…' : 'Sign In'}</button>
-          </div>
-          {message && <small>{message}</small>}
-        </form>
-        <small>No account? <Link href="/register">Register</Link></small>
-      </div>
+      <h2>Sign in</h2>
+      <form onSubmit={onSubmit}>
+        <input
+          type="email"
+          placeholder="Enter Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <input
+          type="password"
+          placeholder="Enter Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+
+        {message && <p>{message}</p>}
+
+        <button disabled={loading}>
+          {loading ? "Signing in…" : "Sign In"}
+        </button>
+      </form>
+
+      <p>
+        No account?{" "}
+        <Link href="/register">
+          Register
+        </Link>
+      </p>
     </main>
   )
 }
+

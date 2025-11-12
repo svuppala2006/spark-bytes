@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 
-export default function Dashboard() {
+export default function OrganizerDashboard() {
   const router = useRouter()
 
   useEffect(() => {
@@ -17,13 +17,13 @@ export default function Dashboard() {
         .select("role")
         .eq("id", auth.user.id)
         .single();
-      if (profile?.role !== "user") return router.replace("/organizer");
+      if (profile?.role !== "organizer") return router.replace("/dashboard");
     })();
   }, [router])
 
   return (
     <main>
-      <h2>Dashboard</h2>
+      <h2>Event Organizer's Dashboard</h2>
       <p>Welcome! You are authenticated.</p>
     </main>
   )
