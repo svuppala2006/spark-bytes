@@ -2,9 +2,9 @@
 
 import { ArrowRight, Search, MapPin, Utensils, Leaf, Users, Calendar, TrendingUp } from 'lucide-react';
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { Button } from "./components/ui/button";
 import { Card } from "./components/ui/card";
+import Image from "next/image";
 
 export default function Page() {
   const router = useRouter();
@@ -154,7 +154,7 @@ export default function Page() {
       {/* CTA */}
       <section className="text-center py-16 border-t bg-white">
         <h2 className="text-3xl font-bold mb-4">Ready to Join us?</h2>
-        <Button size="lg" className="bg-red-600 text-white hover:bg-red-700" onClick={() => router.push("/search")}>
+        <Button size="lg" className="bg-red-600 text-white hover:bg-red-700" onClick={() => router.push("/signin")}>
           Get Started
         </Button>
       </section>

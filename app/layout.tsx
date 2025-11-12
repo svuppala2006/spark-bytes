@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TerrierBytes - Never Let Campus Food Go to Waste",
-  description: "TerrierBytes connects Boston University students with leftover food from campus events. Save money, reduce waste, and build community—one meal at a time.",
+  title: "Spark!Bytes - Never Let Campus Food Go to Waste",
+  description: "Spark!Bytes connects Boston University students with leftover food from campus events. Save money, reduce waste, and build community—one meal at a time.",
 };
 
 export default function RootLayout({
