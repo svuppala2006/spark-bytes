@@ -9,6 +9,7 @@ export default function Register() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [role, setRole] = useState<"user" | "organizer">("user")
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
 
@@ -17,11 +18,11 @@ export default function Register() {
     setMessage('')
     if (!email || !password) return setMessage('Email and password required')
     setLoading(true)
-    const { data, error } = await supabase.auth.signUp({ email, password })
+    const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { role } } })
     if (error) setMessage(error.message)
     else {
       if (data.session) {
-        router.replace('/dashboard')
+        router.replace(role == "organizer" ? "/organizer" : "/dashboard")
       } else {
         setMessage('Check your email to confirm, then sign in.')
       }
@@ -31,18 +32,54 @@ export default function Register() {
 
   return (
     <main>
-      <h2>Register</h2>
-      <div className="card">
-        <form onSubmit={onRegister}>
-          <div className="row">
-            <input type="email" placeholder="you@example.com" value={email} onChange={e=>setEmail(e.target.value)} />
-            <input type="password" placeholder="Choose a password" value={password} onChange={e=>setPassword(e.target.value)} />
-            <button disabled={loading}>{loading ? 'Creating…' : 'Create account'}</button>
-          </div>
-          {message && <small>{message}</small>}
-        </form>
-        <small>Already registered? <Link href="/signin">Sign in</Link></small>
-      </div>
+      <h2>Create account</h2>
+      <form onSubmit={onRegister}>
+        <input
+          type="email"
+          placeholder="Enter Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <input
+          type="password"
+          placeholder="Enter Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+
+        <div>
+          <label>
+            <input
+              type="radio"
+              checked={role === "user"}
+              onChange={() => setRole("user")}
+            />
+            Regular user
+          </label>
+          <label>
+            <input
+              type="radio"
+              checked={role === "organizer"}
+              onChange={() => setRole("organizer")}
+            />
+            Event organizer
+          </label>
+        </div>
+
+        {message && <p>{message}</p>}
+
+        <button disabled={loading}>
+          {loading ? "Creating…" : "Create account"}
+        </button>
+      </form>
+
+      <p>
+        Already registered?{" "}
+        <Link href="/signin">
+          Sign in
+        </Link>
+      </p>
     </main>
   )
 }
+
