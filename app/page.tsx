@@ -5,9 +5,28 @@ import { useRouter } from "next/navigation";
 import { Button } from "./components/ui/button";
 import { Card } from "./components/ui/card";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { getAllEvents, Event } from "@/lib/api";
 
 export default function Page() {
   const router = useRouter();
+  const [featuredEvents, setFeaturedEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchEvents() {
+      try {
+        const events = await getAllEvents();
+        // Take first 3 events as featured
+        setFeaturedEvents(events.slice(0, 3));
+      } catch (error) {
+        console.error('Failed to load events:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchEvents();
+  }, []);
 
   const stats = [
     { label: 'Events Tracked', value: '50+', icon: Calendar },
@@ -41,33 +60,6 @@ export default function Page() {
     { icon: Leaf, title: 'Reduce Food Waste', description: 'Help BU become more sustainable.' },
     { icon: Utensils, title: 'Free Food', description: 'Save money while enjoying great meals.' },
     { icon: Users, title: 'Build Community', description: 'Connect with fellow Terriers.' },
-  ];
-
-  const featuredEvents = [
-    {
-      id: 1,
-      name: 'CS Department Symposium',
-      location: 'Photonics Center, 8th Floor',
-      foodItems: ['Pizza', 'Salad', 'Cookies'],
-      image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591',
-      time: 'Today, 4:00 PM',
-    },
-    {
-      id: 2,
-      name: 'Graduate Student Mixer',
-      location: 'GSU, 2nd Floor Lounge',
-      foodItems: ['Sandwiches', 'Fruit', 'Chips'],
-      image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93',
-      time: 'Tomorrow, 1:00 PM',
-    },
-    {
-      id: 3,
-      name: 'Engineering Seminar',
-      location: 'ENG Building, Room 245',
-      foodItems: ['Bagels', 'Coffee', 'Pastries'],
-      image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085',
-      time: 'Tomorrow, 10:00 AM',
-    },
   ];
 
   return (
@@ -126,32 +118,43 @@ export default function Page() {
         <div className="max-w-6xl mx-auto px-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-8">Featured Events</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {featuredEvents.map(event => (
-              <Card
-                key={event.id}
-                className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-200"
-                onClick={() => router.push(`/events/${event.id}`)}
-              >
-
-                <div className="relative h-48 w-full">
-                  <Image src={event.image} alt={event.name} fill className="object-cover"/>
-                  <div className="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 rounded-full">
-                    {event.time}
+          {loading ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600">Loading events...</p>
+            </div>
+          ) : featuredEvents.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600">No events available at the moment.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {featuredEvents.map(event => (
+                <Card
+                  key={event.id}
+                  className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-200"
+                  onClick={() => router.push(`/events/${event.id}`)}
+                >
+                  <div className="relative h-48 w-full bg-gray-200">
+                    <div className="absolute inset-0 flex items-center justify-center text-gray-500">
+                      <Utensils className="h-16 w-16" />
+                    </div>
+                    <div className="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm">
+                      {event.start_time}
+                    </div>
                   </div>
-                </div>
-                <div className="p-6">
-                  <h3 className="font-semibold text-gray-900 mb-1">{event.name}</h3>
-                  <p className="text-gray-900 flex items-center mb-4"><MapPin className="h-4 w-4 mr-2" /> {event.location}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {event.foodItems.map((item, i) => (
-                      <span key={i} className="px-3 py-1 text-sm bg-gray-100 text-gray-900 rounded-full">{item}</span>
-                    ))}
+                  <div className="p-6">
+                    <h3 className="font-semibold text-gray-900 mb-1">{event.name}</h3>
+                    <p className="text-gray-900 flex items-center mb-4"><MapPin className="h-4 w-4 mr-2" /> {event.location}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {event.food.slice(0, 3).map((item, i) => (
+                        <span key={i} className="px-3 py-1 text-sm bg-gray-100 text-gray-900 rounded-full">{item}</span>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </Card>
-            ))}
-          </div>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

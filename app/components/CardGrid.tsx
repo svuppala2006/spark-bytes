@@ -8,7 +8,7 @@ import { useState } from "react";
 import { Card } from "./Card";
 
 interface CardGridProps {
-  allEvents: {
+  allEvents: Array<{
     id: string | number;  
     name: string;
     location: string;
@@ -19,7 +19,10 @@ interface CardGridProps {
     food?: string[];
     foodType?: string;
     allergens?: string[];
-  }[];
+    organization?: string;
+    start_time?: string;
+    end_time?: string;
+  }>;
 }
 
 export function CardGrid({ allEvents }: CardGridProps) {

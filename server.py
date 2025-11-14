@@ -1,5 +1,6 @@
 import os
 from fastapi import FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 import dotenv
 import uvicorn
 from supabase import create_client, Client
@@ -21,10 +22,10 @@ class Event(BaseModel):
     description: str = Field(..., min_length=1)
     organization: str = Field(..., min_length=1)
     location: str = Field(..., min_length=1)
-    food: list[str] = Field(..., min_items=1)
-    date: str = Field(..., regex=r"^\d{4}-\d{2}-\d{2}$")  # YYYY-MM-DD
-    start_time: str = Field(..., regex=r"^\d{2}:\d{2}$")  # HH:MM
-    end_time: str = Field(..., regex=r"^\d{2}:\d{2}$")    # HH:MM
+    food: list[str] = Field(..., min_length=1)
+    date: str = Field(..., pattern=r"^\d{4}-\d{2}-\d{2}$")  # YYYY-MM-DD
+    start_time: str = Field(..., pattern=r"^\d{2}:\d{2}$")  # HH:MM
+    end_time: str = Field(..., pattern=r"^\d{2}:\d{2}$")    # HH:MM
 
     @field_validator("date")
     def valid_date(cls, v: str):
@@ -75,10 +76,23 @@ class ReserveRequest(BaseModel):
     
 app = FastAPI()
 
+# Add CORS middleware to allow frontend to connect
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # Next.js dev server
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 dotenv.load_dotenv(dotenv_path='.env.local')
 
 url: str = os.getenv("SUPABASE_URL")
 key: str = os.getenv("SUPABASE_KEY")
+
+if not url or not key:
+    raise ValueError("SUPABASE_URL and SUPABASE_KEY must be set in .env.local file")
+
 supabase: Client = create_client(url, key)
 
 @app.get("/")
@@ -144,3 +158,7 @@ async def reserve_item(reserve: ReserveRequest):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
     return update_resp
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)

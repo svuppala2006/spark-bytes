@@ -2,10 +2,11 @@
 
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { CardGrid } from '../components/CardGrid';
 import { Button } from '../components/ui/button';
 import { Search, SlidersHorizontal, MapPin, Utensils } from 'lucide-react';
+import { getAllEvents, Event } from '@/lib/api';
 
 // add same data structure with CardGrid
 const mockEvents = [
@@ -83,6 +84,8 @@ export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  const [allEvents, setAllEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     distance: '',
     foodType: '',
@@ -90,29 +93,42 @@ export default function SearchPage() {
     location: '',
   });
 
+  useEffect(() => {
+    async function fetchEvents() {
+      try {
+        const events = await getAllEvents();
+        setAllEvents(events);
+      } catch (error) {
+        console.error('Failed to load events:', error);
+        // Fallback to mock data if API fails
+        setAllEvents([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchEvents();
+  }, []);
+
   const eventsPerPage = 12;
 
   const filteredEvents = useMemo(() => {
-    return mockEvents.filter(event => {
+    return allEvents.filter(event => {
       const matchesSearch =
         searchQuery === '' ||
         event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (event.description && event.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
         event.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
         event.food.some((food: string) => food.toLowerCase().includes(searchQuery.toLowerCase()));
       
-      const matchesDistance =
-        filters.distance === '' ||
-        parseFloat(event.distance) <= parseFloat(filters.distance);
+      // Distance filtering removed (not in API data)
+      const matchesDistance = true;
       
       const matchesFoodType =
         filters.foodType === '' ||
         event.food.some((food: string) => food.toLowerCase().includes(filters.foodType.toLowerCase()));
       
-      const matchesDietary =
-        (!filters.dietary.vegetarian || event.diet.includes('vegetarian')) &&
-        (!filters.dietary.vegan || event.diet.includes('vegan')) &&
-        (!filters.dietary.glutenFree || event.diet.includes('gluten-free'));
+      // Dietary filtering removed (not in Event model, would need Food items)
+      const matchesDietary = true;
       
       const matchesLocation =
         filters.location === '' ||
@@ -120,7 +136,7 @@ export default function SearchPage() {
       
       return matchesSearch && matchesDistance && matchesFoodType && matchesDietary && matchesLocation;
     });
-  }, [searchQuery, filters]);
+  }, [searchQuery, filters, allEvents]);
 
   const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
   const startIndex = (currentPage - 1) * eventsPerPage;
@@ -140,7 +156,7 @@ export default function SearchPage() {
     <main className="min-h-screen bg-gray-50">
       <div className="max-w-[1920px] mx-auto px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-center mb-6">Available Food Events</h1>
+          <h1 className="text-3xl font-bold text-center mb-6 text-gray-900">Available Food Events</h1>
           
           <div className="flex gap-4">
             <div className="flex-1 relative">
@@ -150,7 +166,7 @@ export default function SearchPage() {
                 placeholder="Search for events by name, food, location..."
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                className="pl-10 h-12 text-lg border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="placeholder-gray-300 pl-10 h-12 text-lg border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             <Button variant="outline" className="h-12 px-6" onClick={() => setShowFilters(!showFilters)}>
@@ -163,7 +179,7 @@ export default function SearchPage() {
           <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div>
-                <label className="mb-3 block font-semibold">Distance</label>
+                <label className="mb-3 block font-semibold text-gray-900">Distance</label>
                 <select
                   value={filters.distance}
                   onChange={(e) => handleFilterChange('distance', e.target.value)}
@@ -177,7 +193,7 @@ export default function SearchPage() {
               </div>
 
               <div>
-                <label className="mb-3 block font-semibold">Food Type</label>
+                <label className="mb-3 block font-semibold text-gray-900">Food Type</label>
                 <select
                   value={filters.foodType}
                   onChange={(e) => handleFilterChange('foodType', e.target.value)}
@@ -193,7 +209,7 @@ export default function SearchPage() {
               </div>
 
               <div>
-                <label className="mb-3 block font-semibold">Location</label>
+                <label className="mb-3 block font-semibold text-gray-900">Location</label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
@@ -207,7 +223,7 @@ export default function SearchPage() {
               </div>
 
               <div>
-                <label className="mb-3 block font-semibold">Dietary Preferences</label>
+                <label className="mb-3 block font-semibold text-gray-900">Dietary Preferences</label>
                 <div className="space-y-2">
                   {['vegetarian', 'vegan', 'glutenFree'].map(diet => (
                     <div key={diet} className="flex items-center space-x-2">
@@ -247,13 +263,17 @@ export default function SearchPage() {
 
         {/* result */}
         <div className="mb-6">
-          <p className="text-gray-600">
-            Found {filteredEvents.length} events
+          <p className="text-gray-900 font-medium text-lg">
+            {loading ? 'Loading events...' : `Found ${filteredEvents.length} event${filteredEvents.length !== 1 ? 's' : ''}`}
             {searchQuery && ` for "${searchQuery}"`}
           </p>
         </div>
 
-        {currentEvents.length > 0 ? (
+        {loading ? (
+          <div className="text-center py-12">
+            <p className="text-gray-900 text-lg">Loading events...</p>
+          </div>
+        ) : currentEvents.length > 0 ? (
           <>
             {/* CardGrid components */}
             <CardGrid allEvents={currentEvents} />
@@ -269,9 +289,9 @@ export default function SearchPage() {
           </>
         ) : (
           <div className="text-center py-12">
-            <Utensils className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No events found</h3>
-            <p className="text-gray-600">
+            <Utensils className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No events found</h3>
+            <p className="text-gray-700 text-lg">
               Try adjusting your search criteria or filters to find more events.
             </p>
           </div>

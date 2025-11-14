@@ -1,3 +1,7 @@
+// NOTE: This component is now deprecated in favor of the full event detail page
+// at /events/[id]/page.tsx which provides better reservation functionality.
+// This modal can be removed once all references are updated to navigate to the detail page.
+
 //This file is for the pop-up reserve items
 
 "use client";

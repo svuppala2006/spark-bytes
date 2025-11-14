@@ -2,13 +2,14 @@
 
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { MapPin, Clock, ArrowLeft, Leaf, CheckCircle2, AlertCircle, Ban } from "lucide-react";
+import { MapPin, Clock, ArrowLeft, Leaf, CheckCircle2, AlertCircle, Ban, Utensils } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card } from "@/app/components/ui/card";
 import { FoodItem, DietaryTag, StockLevel } from "@/app/types";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getAllEvents, Event } from "@/lib/api";
 
-// Mock data - in a real app, this would come from a database/API
+// Mock data for food items - this would come from a separate Food API endpoint
 const mockEvents = {
   "1": {
     id: 1,
@@ -76,13 +77,18 @@ export default function EventDetailPage() {
   const params = useParams();
   const router = useRouter();
   const eventId = params.id as string;
-  const event = mockEvents[eventId as keyof typeof mockEvents];
-
+  
+  // Use mock events for food items (until Food API endpoint is created)
+  const mockEvent = mockEvents[eventId as keyof typeof mockEvents];
+  
+  // Fetch actual event data from API
+  const [apiEvent, setApiEvent] = useState<Event | null>(null);
+  const [loading, setLoading] = useState(true);
   const [reservedItems, setReservedItems] = useState<Set<string>>(new Set());
   const [foodQuantities, setFoodQuantities] = useState<Record<string, number>>(() => {
-    if (!event) return {};
+    if (!mockEvent) return {};
     const quantities: Record<string, number> = {};
-    event.foodItems.forEach(item => {
+    mockEvent.foodItems.forEach(item => {
       if (item.quantity !== undefined) {
         quantities[item.id] = item.quantity;
       }
@@ -91,7 +97,43 @@ export default function EventDetailPage() {
   });
   const [showConfirmation, setShowConfirmation] = useState(false);
 
-  if (!event) {
+  useEffect(() => {
+    async function fetchEvent() {
+      try {
+        const events = await getAllEvents();
+        const foundEvent = events.find(e => e.id.toString() === eventId);
+        setApiEvent(foundEvent || null);
+      } catch (error) {
+        console.error('Failed to load event:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchEvent();
+  }, [eventId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600 text-lg">Loading event...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Use API event if available, fallback to mock for food items display
+  const event = mockEvent;
+  const eventInfo = apiEvent || (event ? { 
+    name: event.name, 
+    location: event.location, 
+    description: event.description,
+    date: "2024-11-15",
+    start_time: event.time,
+    end_time: event.time,
+  } : null);
+
+  if (!event && !apiEvent) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -164,21 +206,34 @@ export default function EventDetailPage() {
       {/* Event Info */}
       <div className="max-w-6xl mx-auto px-8 py-8">
         <div className="bg-white rounded-xl overflow-hidden shadow-sm mb-8">
-          <div className="relative h-64 w-full">
-            <Image src={event.image} alt={event.name} fill className="object-cover" />
+          <div className="relative h-64 w-full bg-gray-200">
+            {event && event.image ? (
+              <Image src={event.image} alt={eventInfo?.name || "Event"} fill className="object-cover" />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Utensils className="h-20 w-20 text-gray-400" />
+              </div>
+            )}
             <div className="absolute top-4 right-4 bg-red-600 text-white px-4 py-2 rounded-full flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              {event.time}
+              {apiEvent?.start_time || event?.time || "TBD"}
             </div>
           </div>
           <div className="p-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{event.name}</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{eventInfo?.name}</h1>
             <p className="text-gray-600 flex items-center mb-4">
               <MapPin className="h-5 w-5 mr-2" />
-              {event.location}
+              {eventInfo?.location}
             </p>
-            {event.description && (
-              <p className="text-gray-700">{event.description}</p>
+            {eventInfo?.description && (
+              <p className="text-gray-700">{eventInfo.description}</p>
+            )}
+            {apiEvent && (
+              <div className="mt-4 text-gray-600">
+                <p><strong>Date:</strong> {apiEvent.date}</p>
+                <p><strong>Time:</strong> {apiEvent.start_time} - {apiEvent.end_time}</p>
+                <p><strong>Organization:</strong> {apiEvent.organization}</p>
+              </div>
             )}
           </div>
         </div>

@@ -1,6 +1,18 @@
+"use client";
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
+  const pathname = usePathname();
+  
+  const isActive = (path: string) => {
+    if (path === '/') {
+      return pathname === '/';
+    }
+    return pathname.startsWith(path);
+  };
+  
   return (
     <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -17,7 +29,9 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-8">
             <Link
               href="/"
-              className="flex items-center gap-2 text-gray-700 hover:text-red-600 transition-colors"
+              className={`flex items-center gap-2 transition-colors ${
+                isActive('/') ? 'text-red-600' : 'text-gray-700 hover:text-red-600'
+              }`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
@@ -27,7 +41,9 @@ export default function Navbar() {
 
             <Link
               href="/search"
-              className="flex items-center gap-2 text-gray-700 hover:text-red-600 transition-colors"
+              className={`flex items-center gap-2 transition-colors ${
+                isActive('/search') ? 'text-red-600' : 'text-gray-700 hover:text-red-600'
+              }`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
@@ -37,7 +53,9 @@ export default function Navbar() {
 
             <Link
               href="/food"
-              className="flex items-center gap-2 text-gray-700 hover:text-red-600 transition-colors"
+              className={`flex items-center gap-2 transition-colors ${
+                isActive('/food') ? 'text-red-600' : 'text-gray-700 hover:text-red-600'
+              }`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zM3 7a1 1 0 000 2h7a1 1 0 100-2H3zM3 11a1 1 0 100 2h4a1 1 0 100-2H3zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z" />
@@ -47,7 +65,9 @@ export default function Navbar() {
 
             <Link
               href="/about"
-              className="flex items-center gap-2 text-gray-700 hover:text-red-600 transition-colors"
+              className={`flex items-center gap-2 transition-colors ${
+                isActive('/about') ? 'text-red-600' : 'text-gray-700 hover:text-red-600'
+              }`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
