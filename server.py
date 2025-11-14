@@ -87,8 +87,8 @@ app.add_middleware(
 
 dotenv.load_dotenv(dotenv_path='.env.local')
 
-url: str = os.getenv("SUPABASE_URL")
-key: str = os.getenv("SUPABASE_KEY")
+url: str = os.getenv("NEXT_PUBLIC_SUPABASE_URL")
+key: str = os.getenv("NEXT_PUBLIC_SUPABASE_KEY")
 
 if not url or not key:
     raise ValueError("SUPABASE_URL and SUPABASE_KEY must be set in .env.local file")
