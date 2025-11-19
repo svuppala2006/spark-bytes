@@ -5,7 +5,6 @@ import Link from "next/link";
 export default function LoginChoice() {
   return (
     <main className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white px-4">
-      {/* Background overlay if needed */}
       <div className="text-center space-y-6">
         <h1 className="text-4xl font-bold">SparkBytes Portal</h1>
         <p className="text-lg opacity-80">
