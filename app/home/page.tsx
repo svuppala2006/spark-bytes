@@ -157,15 +157,6 @@ export default function Page() {
           )}
         </div>
       </section>
-
-      {/* CTA */}
-      <section className="text-center py-16 border-t bg-white">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to Join us?</h2>
-        <Button size="lg" className="bg-red-600 text-white hover:bg-red-700" onClick={() => router.push("/signin")}>
-          Get Started
-        </Button>
-      </section>
-
     </div>
   );
 }
