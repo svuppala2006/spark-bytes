@@ -1,15 +1,19 @@
 "use client";
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import Link from 'next/link'
 
 export default function Register() {
   const router = useRouter()
+  const params = useSearchParams()
+
+  const initialRole = params.get("role") === "organizer" ? "organizer" :"user"
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [role, setRole] = useState<"user" | "organizer">("user")
+  const [role, setRole] = useState<"user" | "organizer">(initialRole)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
 
