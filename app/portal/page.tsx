@@ -23,7 +23,7 @@ export default function Portal() {
             href="/register?role=organizer"
             className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg text-xl font-semibold transition"
           >
-            Organizer Registration
+            Event Organizer Registration
           </Link>
         </div>
 
