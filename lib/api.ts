@@ -17,7 +17,7 @@ export interface Event {
 export interface FoodItem {
     id: number;
     name: string;
-    quantity: number;
+    quantity: number | null;
     stockLevel: 'low' | 'medium' | 'high';
     dietaryTags: string[];
     description: string;
@@ -175,7 +175,8 @@ export async function getFoodByEvent(eventId: number | string): Promise<FoodItem
         return rows.map((r: any) => ({
             id: typeof r.id === 'string' ? r.id : String(r.id),
             name: r.name,
-            quantity: r.quantity ?? 0,
+            // Preserve null/undefined as null so UI falls back to stockLevel when quantity unknown
+            quantity: (r.quantity !== undefined && r.quantity !== null) ? Number(r.quantity) : null,
             stockLevel: r.stockLevel,
             dietaryTags: r.dietaryTags || [],
             description: r.description || '',

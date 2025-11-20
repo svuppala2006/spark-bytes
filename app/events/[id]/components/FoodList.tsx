@@ -24,7 +24,14 @@ export default function FoodList({
         <FoodCard
           key={item.id}
           item={item}
-          currentQuantity={quantities[item.id] ?? item.quantity ?? 0}
+          // Prefer an explicit numeric quantity when available. If neither the live
+          // `quantities` map nor the item row has a numeric `quantity`, pass `null`
+          // so the card will fall back to `stockLevel` and allow reservations.
+          currentQuantity={
+            (quantities[item.id] !== undefined && quantities[item.id] !== null)
+              ? quantities[item.id]
+              : (item.quantity !== undefined && item.quantity !== null ? item.quantity : null)
+          }
           isReserved={reservedItems.has(item.id)}
           onToggleReserve={onToggleReserve}
           persistedReserved={persistedReserved.has(item.id)}

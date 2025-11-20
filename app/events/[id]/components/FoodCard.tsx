@@ -15,13 +15,16 @@ export default function FoodCard({
   onCancelReserve,
 }: {
   item: FoodItem;
-  currentQuantity: number;
+  currentQuantity?: number | null;
   isReserved: boolean;
   onToggleReserve: (id: string) => void;
   persistedReserved: boolean;
   onCancelReserve: (id: string) => void;
 }) {
-  const isSoldOut = item.quantity !== undefined && currentQuantity === 0;
+  // Only consider sold out when we have an explicit numeric quantity of zero.
+  // If quantity is null/undefined but a stockLevel exists (low/medium/high),
+  // reservations should still be allowed.
+  const isSoldOut = (currentQuantity !== undefined && currentQuantity !== null && Number(currentQuantity) === 0);
 
   return (
     <Card className="p-6">

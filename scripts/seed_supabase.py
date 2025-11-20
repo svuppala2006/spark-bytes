@@ -14,16 +14,40 @@ if not url or not key:
 supabase = create_client(url, key)
 
 # Create 10 sample events and insert multiple food items for each event
-print('Creating 10 sample Events...')
+print('Creating 10 sample Events with full columns...')
 events = []
 from datetime import datetime, timedelta
 
 base_date = datetime.utcnow()
+sample_locations = [
+    'Student Union Hall',
+    'Campus Lawn',
+    'Engineering Atrium',
+    'Dining Commons',
+    'Library Plaza',
+]
+sample_orgs = ['Campus Catering', 'Student Org', 'Sustainability Club', 'Engineering Dept', 'Alumni Assoc']
+sample_food_names = ['Cheese Pizza', 'Vegetable Samosa', 'Orange Juice', 'Plain Bagel', 'Coffee', 'Sourdough Sandwich', 'Fruit Salad']
+
 for i in range(1, 11):
+    date_obj = (base_date + timedelta(days=i))
+    date_str = date_obj.strftime('%Y-%m-%d')
+    start_time = (date_obj.replace(hour=12, minute=0)).strftime('%H:%M')
+    end_time = (date_obj.replace(hour=14, minute=0)).strftime('%H:%M')
+    org = sample_orgs[i % len(sample_orgs)]
+    location = sample_locations[i % len(sample_locations)]
+    # pick 3 food names to store in the event record (frontend `food` column expects string[])
+    foods_for_event = [sample_food_names[(i + j) % len(sample_food_names)] for j in range(3)]
+
     events.append({
-        'name': f'Sample Event {i}',
-        'description': f'This is sample event number {i}',
-        'date': (base_date + timedelta(days=i)).isoformat(),
+        'name': f'Sample Event {i} - {org}',
+        'description': f'This is sample event number {i} hosted by {org} at {location}.',
+        'organization': org,
+        'location': location,
+        'food': foods_for_event,
+        'date': date_str,
+        'start_time': start_time,
+        'end_time': end_time,
     })
 
 ev_resp = supabase.table('Events').insert(events).execute()
@@ -46,12 +70,12 @@ print(f'Inserted {len(inserted_event_ids)} events. Creating food rows for each e
 foods = []
 sample_foods = [
     { 'name': 'Cheese Pizza', 'quantity': 12, 'dietaryTags': ['vegetarian'], 'description': 'Large slices' },
-    { 'name': 'Vegetable Samosa', 'quantity': 30, 'dietaryTags': ['vegan'], 'description': 'Fried snacks' },
-    { 'name': 'Orange Juice', 'stockLevel': 'high', 'dietaryTags': ['vegan'], 'description': 'Pitcher' },
-    { 'name': 'Plain Bagel', 'quantity': 20, 'dietaryTags': ['vegetarian'], 'description': 'With cream cheese' },
-    { 'name': 'Coffee', 'stockLevel': 'high', 'dietaryTags': ['vegan'], 'description': 'Regular and decaf' },
-    { 'name': 'Sourdough Sandwich', 'quantity': 10, 'dietaryTags': [], 'description': 'Ham & cheese option' },
-    { 'name': 'Fruit Salad', 'quantity': 15, 'dietaryTags': ['vegan', 'gluten-free'], 'description': 'Seasonal fruits' },
+    { 'name': 'Vegetable Samosa', 'quantity': 30, 'dietaryTags': ['vegan'], 'description': 'Fried snacks'},
+    { 'name': 'Orange Juice', 'stockLevel': 'high', 'dietaryTags': ['vegan'], 'description': 'Pitcher'},
+    { 'name': 'Plain Bagel', 'quantity': 20, 'dietaryTags': ['vegetarian'], 'description': 'With cream cheese'},
+    { 'name': 'Coffee', 'stockLevel': 'high', 'dietaryTags': ['vegan'], 'description': 'Regular and decaf'},
+    { 'name': 'Sourdough Sandwich', 'quantity': 10, 'dietaryTags': [], 'description': 'Ham & cheese option'},
+    { 'name': 'Fruit Salad', 'quantity': 15, 'dietaryTags': ['vegan', 'gluten-free'], 'description': 'Seasonal fruits'},
 ]
 
 for eid in inserted_event_ids:
