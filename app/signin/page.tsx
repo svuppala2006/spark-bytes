@@ -20,7 +20,11 @@ export default function SignIn() {
     if (!email || !password) return setMessage('Email and password required')
     setLoading(true)
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) setMessage(error.message)
+    if (error) {
+      setMessage(error.message)
+      setLoading(false)
+      return;
+    }
     const { data: auth } = await supabase.auth.getUser()
     const userId = auth?.user?.id
     let role: Role = "user";
@@ -37,36 +41,58 @@ export default function SignIn() {
   }, [email, password, router])
 
   return (
-    <main>
-      <h2>Sign in</h2>
-      <form onSubmit={onSubmit}>
-        <input
-          type="email"
-          placeholder="Enter Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Enter Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+    <div className="min-h-screen bg-[#f2f2f2] flex flex-col relative">
+      <div className="flex flex-col items-center flex-grow justify-center">
+        <div className="bg-white shadow-md p-10 rounded-md w-[380px]">
+          {/* Title */}
+          <div className="text-center mb-6">
+            <h2 className="text-xl font-semibold text-gray-800">Sign in</h2>
+            <p className="text-sm text-gray-500">
+              Enter your BU email and password to continue.
+            </p>
+          </div>
 
-        {message && <p>{message}</p>}
+          {/* FORM */}
+          <form onSubmit={onSubmit} className="space-y-4">
+            <input
+              type="email"
+              placeholder="BU email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md placeholder-gray-500 text-gray-600"
+            />
 
-        <button disabled={loading}>
-          {loading ? "Signing in…" : "Sign In"}
-        </button>
-      </form>
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md placeholder-gray-500 text-gray-600"
+            />
 
-      <p>
-        No account?{" "}
-        <Link href="/register">
-          Register
-        </Link>
-      </p>
-    </main>
-  )
+            {message && (
+              <p className="text-red-600 text-sm" aria-live="polite">
+                {message}
+              </p>
+            )}
+
+            <button
+              disabled={loading}
+              className="w-full py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition"
+            >
+              {loading ? "Signing in…" : "Sign in"}
+            </button>
+          </form>
+
+          {/* Links */}
+          <p className="mt-4 text-xs text-gray-600 text-left">
+            No account?{" "}
+            <Link href="/portal" className="text-blue-700 underline">
+              Create an account
+            </Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 }
-
