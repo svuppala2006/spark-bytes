@@ -13,39 +13,58 @@ if not url or not key:
 
 supabase = create_client(url, key)
 
-# Fetch existing Events to attach food items to
-print('Querying existing events...')
-ev_resp = supabase.table('Events').select('id').execute()
+# Create 10 sample events and insert multiple food items for each event
+print('Creating 10 sample Events...')
+events = []
+from datetime import datetime, timedelta
+
+base_date = datetime.utcnow()
+for i in range(1, 11):
+    events.append({
+        'name': f'Sample Event {i}',
+        'description': f'This is sample event number {i}',
+        'date': (base_date + timedelta(days=i)).isoformat(),
+    })
+
+ev_resp = supabase.table('Events').insert(events).execute()
 ev_data = getattr(ev_resp, 'data', ev_resp) or []
-existing_event_ids = []
+inserted_event_ids = []
 for row in ev_data:
     if isinstance(row, dict):
         eid = row.get('id')
     else:
         eid = getattr(row, 'id', None)
     if eid is not None:
-        existing_event_ids.append(eid)
+        inserted_event_ids.append(eid)
 
-if not existing_event_ids:
-    print('No Events found in the DB. Please create Events first before inserting Food rows.')
+if not inserted_event_ids:
+    print('Failed to insert events or no event IDs returned. Response:', ev_resp)
     raise SystemExit(1)
 
-# Sample food items attached to the first two existing events (or only one if only one exists)
+print(f'Inserted {len(inserted_event_ids)} events. Creating food rows for each event...')
+
 foods = []
-if len(existing_event_ids) >= 1:
-    foods += [
-        {'name': 'Cheese Pizza', 'quantity': 12, 'dietaryTags': ['vegetarian'], 'description': 'Large slices', 'event_id': existing_event_ids[0]},
-        {'name': 'Vegetable Samosa', 'quantity': 30, 'dietaryTags': ['vegan'], 'description': 'Fried snacks', 'event_id': existing_event_ids[0]},
-        {'name': 'Orange Juice', 'stockLevel': 'high', 'dietaryTags': ['vegan'], 'description': 'Pitcher', 'event_id': existing_event_ids[0]},
-    ]
+sample_foods = [
+    { 'name': 'Cheese Pizza', 'quantity': 12, 'dietaryTags': ['vegetarian'], 'description': 'Large slices' },
+    { 'name': 'Vegetable Samosa', 'quantity': 30, 'dietaryTags': ['vegan'], 'description': 'Fried snacks' },
+    { 'name': 'Orange Juice', 'stockLevel': 'high', 'dietaryTags': ['vegan'], 'description': 'Pitcher' },
+    { 'name': 'Plain Bagel', 'quantity': 20, 'dietaryTags': ['vegetarian'], 'description': 'With cream cheese' },
+    { 'name': 'Coffee', 'stockLevel': 'high', 'dietaryTags': ['vegan'], 'description': 'Regular and decaf' },
+    { 'name': 'Sourdough Sandwich', 'quantity': 10, 'dietaryTags': [], 'description': 'Ham & cheese option' },
+    { 'name': 'Fruit Salad', 'quantity': 15, 'dietaryTags': ['vegan', 'gluten-free'], 'description': 'Seasonal fruits' },
+]
 
-if len(existing_event_ids) >= 2:
-    foods += [
-        {'name': 'Plain Bagel', 'quantity': 20, 'dietaryTags': ['vegetarian'], 'description': 'With cream cheese', 'event_id': existing_event_ids[1]},
-        {'name': 'Coffee', 'stockLevel': 'high', 'dietaryTags': ['vegan'], 'description': 'Regular and decaf', 'event_id': existing_event_ids[1]},
-    ]
+for eid in inserted_event_ids:
+    # create 3-5 food rows per event, rotate through sample_foods
+    import random
+    count = random.randint(3, 5)
+    choices = random.sample(sample_foods, k=count)
+    for f in choices:
+        row = f.copy()
+        row['event_id'] = eid
+        foods.append(row)
 
-print('Inserting food rows...')
+print(f'Inserting {len(foods)} food rows...')
 food_resp = supabase.table('Food').insert(foods).execute()
 print('Food insert response:', getattr(food_resp, 'data', food_resp))
 

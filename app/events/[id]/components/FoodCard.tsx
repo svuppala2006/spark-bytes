@@ -38,7 +38,13 @@ export default function FoodCard({
             <h3 className="text-lg font-semibold text-gray-900">{item.name}</h3>
             {item.description && <p className="text-sm text-gray-600 mt-1">{item.description}</p>}
           </div>
-          {item.stockLevel ? (
+          {(currentQuantity !== undefined && currentQuantity !== null) ? (
+            isSoldOut ? (
+              <span className="text-sm font-medium text-red-700 bg-red-100 px-3 py-1 rounded-full">Sold Out</span>
+            ) : (
+              <span className="text-sm font-medium text-gray-700 bg-gray-100 px-3 py-1 rounded-full">{currentQuantity} left</span>
+            )
+          ) : item.stockLevel ? (
             <span
               className={`text-sm font-medium px-3 py-1 rounded-full ${
                 item.stockLevel === 'high'
@@ -50,10 +56,8 @@ export default function FoodCard({
             >
               {item.stockLevel === 'high' ? '🟢 High Stock' : item.stockLevel === 'medium' ? '🟡 Medium Stock' : '🟠 Low Stock'}
             </span>
-          ) : isSoldOut ? (
-            <span className="text-sm font-medium text-red-700 bg-red-100 px-3 py-1 rounded-full">Sold Out</span>
           ) : (
-            <span className="text-sm font-medium text-gray-700 bg-gray-100 px-3 py-1 rounded-full">{currentQuantity} left</span>
+            <span className="text-sm font-medium text-gray-700 bg-gray-100 px-3 py-1 rounded-full">Quantity unavailable</span>
           )}
         </div>
       </div>
