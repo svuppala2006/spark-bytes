@@ -1,82 +1,38 @@
 import os
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 import dotenv
 import uvicorn
 from supabase import create_client, Client
 from pydantic import BaseModel, Field, field_validator, ValidationInfo
-from typing import Optional
-from datetime import datetime
+from typing import Optional, List
 from enum import Enum
 
+# Create the FastAPI app early so middleware and routes can be added
+app = FastAPI()
 
+
+# Simple stock level enum used by the reserve/cancel logic
 class StockLevel(str, Enum):
-    LOW = "low"
-    MEDIUM = "medium"
     HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
 
 
-class Event(BaseModel):
-    id: int | None = None
-    name: str = Field(..., min_length=1, max_length=200)
-    description: str = Field(..., min_length=1)
-    organization: str = Field(..., min_length=1)
-    location: str = Field(..., min_length=1)
-    food: list[str] = Field(..., min_length=1)
-    date: str = Field(..., pattern=r"^\d{4}-\d{2}-\d{2}$")  # YYYY-MM-DD
-    start_time: str = Field(..., pattern=r"^\d{2}:\d{2}$")  # HH:MM
-    end_time: str = Field(..., pattern=r"^\d{2}:\d{2}$")    # HH:MM
-
-    @field_validator("date")
-    def valid_date(cls, v: str):
-        try:
-            datetime.strptime(v, "%Y-%m-%d")
-        except ValueError:
-            raise ValueError("date must be in YYYY-MM-DD format and a valid date")
-        return v
-
-    @field_validator("start_time", "end_time")
-    def valid_time(cls, v: str):
-        try:
-            datetime.strptime(v, "%H:%M")
-        except ValueError:
-            raise ValueError("time must be in HH:MM 24-hour format")
-        return v
-
-    @field_validator("end_time")
-    def end_after_start(cls, v: str, info: ValidationInfo):
-        # info.data contains other field values validated so far
-        start = info.data.get("start_time")
-        if start:
-            try:
-                s = datetime.strptime(start, "%H:%M")
-                e = datetime.strptime(v, "%H:%M")
-            except ValueError:
-                # other validators will raise specific messages
-                return v
-            if e <= s:
-                raise ValueError("end_time must be after start_time")
-        return v
-
-
-class Food(BaseModel):
-    id: int | None = None
-    name: str = Field(..., min_length=1)
-    quantity: int = Field(..., ge=0)
-    stockLevel: StockLevel = StockLevel.MEDIUM
-    dietaryTags: list[str] = Field(default_factory=list)
-    description: Optional[str] = Field(default="")
-    event_id: int = Field(..., ge=0)
-
-
+# Request model for reserving an item
 class ReserveRequest(BaseModel):
     food_id: int
     quantity: int = Field(..., gt=0)
-    
-    
-app = FastAPI()
+    profile_id: Optional[str] = None
 
-# Add CORS middleware to allow frontend to connect
+
+# Minimal Event model for the POST /event/ endpoint. Allow extra fields.
+class Event(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    date: Optional[str] = None
+
+    model_config = {"extra": "allow"}
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # Next.js dev server
@@ -95,6 +51,75 @@ if not url or not key:
 
 supabase: Client = create_client(url, key)
 
+
+def _extract_user_id_from_request(request: Optional[Request]) -> Optional[str]:
+    """Try to extract a Supabase user id from an Authorization header on the request.
+    This attempts to call the Supabase Python client helper if available; failures are swallowed.
+    """
+    if request is None:
+        return None
+    auth = None
+    try:
+        auth = request.headers.get("authorization") or request.headers.get("Authorization")
+    except Exception:
+        auth = None
+
+    if not auth:
+        return None
+
+    parts = auth.split()
+    if len(parts) != 2:
+        return None
+    scheme, token = parts[0].lower(), parts[1]
+    if scheme != "bearer":
+        return None
+
+    # Try to use Supabase client to get the user associated with this token.
+    try:
+        # supabase-python has varied APIs across versions; try common ones.
+        user_info = None
+        try:
+            user_info = supabase.auth.get_user(token)
+        except Exception:
+            try:
+                # alternate signature
+                user_info = supabase.auth.get_user(access_token=token)
+            except Exception:
+                user_info = None
+
+        # user_info may be a dict or a response-like object
+        if user_info is None:
+            return None
+
+        # Try common locations for the id
+        if isinstance(user_info, dict):
+            # e.g. {'data': {'user': {'id': '...'}}}
+            data = user_info.get('data')
+            if isinstance(data, dict):
+                user = data.get('user') or data
+                if isinstance(user, dict) and user.get('id'):
+                    return user.get('id')
+
+            # fallback top-level
+            if user_info.get('user') and isinstance(user_info.get('user'), dict):
+                return user_info['user'].get('id')
+            if user_info.get('id'):
+                return user_info.get('id')
+
+        # Try attribute access (response-like objects)
+        try:
+            maybe_user = getattr(user_info, 'user', None) or getattr(user_info, 'data', None)
+            if isinstance(maybe_user, dict) and maybe_user.get('id'):
+                return maybe_user.get('id')
+            if hasattr(user_info, 'id'):
+                return getattr(user_info, 'id')
+        except Exception:
+            pass
+    except Exception:
+        return None
+
+    return None
+
 @app.get("/")
 async def root():
     return supabase.table('Events').select('*').execute()
@@ -107,6 +132,32 @@ async def search_by_name(name: str):
 async def search_by_food(food: str):
     return supabase.table('Events').select('*').contains("food", [food]).execute()
 
+
+@app.get("/events/{event_id}/food")
+async def get_food_by_event(event_id: int):
+    """Return food items associated with a given event_id from the Food table."""
+    try:
+        resp = supabase.table('Food').select('*').eq('event_id', event_id).execute()
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+    # Normalize response structure (supabase client may return object with .data or a dict)
+    data = None
+    if isinstance(resp, dict):
+        data = resp.get('data')
+    else:
+        data = getattr(resp, 'data', None)
+
+    if data is None:
+        # If supabase returned an unexpected format, return empty list
+        return {"data": []}
+
+    if len(data) == 0:
+        # Explicit 404 might be desired, but returning empty list is also acceptable
+        return {"data": []}
+
+    return {"data": data}
+
 @app.post("/event/")
 async def add_event(event: Event):
     # Use the dict representation and exclude None values
@@ -118,10 +169,10 @@ async def add_event(event: Event):
     return response
 
 @app.put("/reserve/")
-async def reserve_item(reserve: ReserveRequest):
-    # fetch current quantity
+async def reserve_item(reserve: ReserveRequest, request: Request):
+    # fetch current quantity and stockLevel
     try:
-        q_resp = supabase.table('Food').select('quantity').eq("id", reserve.food_id).execute()
+        q_resp = supabase.table('Food').select('quantity, stockLevel').eq("id", reserve.food_id).execute()
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
@@ -135,29 +186,296 @@ async def reserve_item(reserve: ReserveRequest):
     if not data or len(data) == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Food item not found")
 
-    # extract quantity value
-    try:
-        current_qty = data[0].get('quantity') if isinstance(data[0], dict) else data[0]['quantity']
-    except Exception:
-        # fallback - try indexing
-        try:
-            current_qty = data[0][0]
-        except Exception:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unable to read current quantity")
+    row = data[0] if isinstance(data[0], dict) else data[0]
 
+    # Try to extract quantity and stock level
+    current_qty = None
+    try:
+        current_qty = row.get('quantity') if isinstance(row, dict) else row['quantity']
+    except Exception:
+        current_qty = None
+
+    stock_level = None
+    try:
+        stock_level = row.get('stockLevel') if isinstance(row, dict) else row['stockLevel']
+    except Exception:
+        stock_level = None
+
+    # If quantity is missing, derive an initial count from stock level
+    # high => treated as unlimited (do not decrement quantity on reserve)
+    # medium => 30, low => 7
+    derived_from_stock = False
     if current_qty is None:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Current quantity missing")
+        if stock_level == StockLevel.HIGH.value or stock_level == StockLevel.HIGH:
+            # unlimited: accept reservation but do not change quantity
+            try:
+                # return a simple success response (no DB update required)
+                return {"status": "ok", "unlimited": True}
+            except Exception as e:
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        elif stock_level == StockLevel.MEDIUM.value or stock_level == StockLevel.MEDIUM:
+            current_qty = 30
+            derived_from_stock = True
+        elif stock_level == StockLevel.LOW.value or stock_level == StockLevel.LOW:
+            current_qty = 7
+            derived_from_stock = True
+        else:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Current quantity missing and stock level unavailable")
+
+    # ensure we have a numeric quantity now
+    try:
+        current_qty = int(current_qty)
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Invalid current quantity")
 
     new_qty = current_qty - reserve.quantity
     if new_qty < 0:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Not enough stock to reserve requested quantity")
 
+    # determine new stock level based on remaining quantity
+    new_stock = None
+    if new_qty > 30:
+        new_stock = StockLevel.HIGH.value
+    elif new_qty >= 8:
+        new_stock = StockLevel.MEDIUM.value
+    elif new_qty >= 1:
+        new_stock = StockLevel.LOW.value
+    else:
+        # sold out -> set quantity to 0 and keep low to indicate empty/low
+        new_stock = StockLevel.LOW.value
+
     try:
-        update_resp = supabase.table('Food').update({'quantity': new_qty}).eq("id", reserve.food_id).execute()
+        update_resp = supabase.table('Food').update({'quantity': new_qty, 'stockLevel': new_stock}).eq("id", reserve.food_id).execute()
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
-    return update_resp
+    profile_update_resp = None
+    # Prefer user id from Authorization header (Supabase access token)
+    profile_id_to_use = reserve.profile_id
+    try:
+        auth_header = reserve.__dict__.get('profile_id')  # placeholder to keep flake usage
+    except Exception:
+        auth_header = None
+    # Attempt to get user id from request context via dependency injection is not available here
+    # We'll try to read from an Authorization header using the FastAPI Request if present in the global scope
+    # NOTE: To access the request, callers should pass it; we will attempt to read from a thread-local if available.
+    # For now, if a real Authorization header is provided, frontend should include it and we'll extract server-side below.
+
+    # If profile_id provided in body, use it (fallback). If Authorization header present in incoming HTTP request,
+    # prefer the user id extracted from that token. We'll attempt to extract via the Supabase auth client if possible.
+    # Attempt to extract a verified user id from the incoming Authorization header.
+    token_user_id = _extract_user_id_from_request(request)
+    if token_user_id:
+        profile_id_to_use = token_user_id
+
+    # If caller provided a profile id (and no token user id), append this food id to their reserved_items array
+    if profile_id_to_use:
+        try:
+            p_resp = supabase.table('profiles').select('reserved_items').eq('id', profile_id_to_use).single().execute()
+        except Exception as e:
+            # Log a warning but do not fail the main reservation if profile lookup fails
+            p_resp = None
+
+        # normalize profile response
+        p_data = None
+        if isinstance(p_resp, dict):
+            p_data = p_resp.get('data')
+        elif p_resp is not None:
+            p_data = getattr(p_resp, 'data', None)
+
+        existing_list = []
+        if p_data:
+            # single() returns a single object, not a list
+            # depending on client version, `.data` may be the row or a list; handle both
+            row = None
+            if isinstance(p_data, list) and len(p_data) > 0:
+                row = p_data[0]
+            elif isinstance(p_data, dict):
+                row = p_data
+
+            if row is not None:
+                try:
+                    existing_list = row.get('reserved_items') if isinstance(row, dict) else row['reserved_items']
+                except Exception:
+                    existing_list = []
+
+        if existing_list is None:
+            existing_list = []
+
+        # Ensure we have a Python list
+        if not isinstance(existing_list, list):
+            existing_list = list(existing_list) if existing_list is not None else []
+
+        # Append the food id if not already present
+        str_food_id = str(reserve.food_id)
+        if str_food_id not in [str(x) for x in existing_list]:
+            existing_list.append(reserve.food_id)
+            try:
+                profile_update_resp = supabase.table('profiles').update({'reserved_items': existing_list}).eq('id', profile_id_to_use).execute()
+            except Exception as e:
+                # Do not fail the reservation if profile update fails; include info in response
+                profile_update_resp = {'error': str(e)}
+
+    return {"food_update": update_resp, "profile_update": profile_update_resp}
+
+
+class CancelReserveRequest(BaseModel):
+    food_id: int
+    quantity: int = Field(..., gt=0)
+    profile_id: Optional[str] = None
+
+
+@app.post("/reserve/cancel")
+async def cancel_reservation(req: CancelReserveRequest, request: Request):
+    """Cancel a reservation: remove food_id from profile.reserved_items and increment Food.quantity."""
+    # First, remove from profile if provided
+    profile_update_resp = None
+    # Prefer token-derived user id if available; fallback to provided profile_id
+    token_user = _extract_user_id_from_request(request)
+    profile_id_for_action = token_user or req.profile_id
+
+    if profile_id_for_action:
+        try:
+            # Fetch current reserved_items
+            p_resp = supabase.table('profiles').select('reserved_items').eq('id', profile_id_for_action).single().execute()
+        except Exception:
+            p_resp = None
+
+        p_data = None
+        if isinstance(p_resp, dict):
+            p_data = p_resp.get('data')
+        elif p_resp is not None:
+            p_data = getattr(p_resp, 'data', None)
+
+        existing_list = []
+        if p_data:
+            row = None
+            if isinstance(p_data, list) and len(p_data) > 0:
+                row = p_data[0]
+            elif isinstance(p_data, dict):
+                row = p_data
+            if row is not None:
+                try:
+                    existing_list = row.get('reserved_items') if isinstance(row, dict) else row['reserved_items']
+                except Exception:
+                    existing_list = []
+
+        if not existing_list:
+            existing_list = []
+
+        # Normalize
+        if existing_list is None:
+            existing_list = []
+        if not isinstance(existing_list, list):
+            existing_list = list(existing_list) if existing_list is not None else []
+
+        # Remove the food id (match as string or number)
+        new_list = [x for x in existing_list if str(x) != str(req.food_id)]
+        try:
+            profile_update_resp = supabase.table('profiles').update({'reserved_items': new_list}).eq('id', profile_id_for_action).execute()
+        except Exception as e:
+            profile_update_resp = {'error': str(e)}
+
+    # Next, increment food quantity back (if quantity field exists on row)
+    food_update_resp = None
+    try:
+        q_resp = supabase.table('Food').select('quantity, stockLevel').eq('id', req.food_id).execute()
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+    data = None
+    if isinstance(q_resp, dict):
+        data = q_resp.get('data')
+    else:
+        data = getattr(q_resp, 'data', None)
+
+    if not data or len(data) == 0:
+        # Food not found; still return profile update result
+        return {'profile_update': profile_update_resp, 'food_update': None}
+
+    row = data[0] if isinstance(data[0], dict) else data[0]
+    current_qty = None
+    try:
+        current_qty = row.get('quantity') if isinstance(row, dict) else row['quantity']
+    except Exception:
+        current_qty = None
+
+    # If quantity is None (unlimited), do not change
+    if current_qty is None:
+        return {'profile_update': profile_update_resp, 'food_update': {'status': 'unlimited'}}
+
+    try:
+        new_qty = int(current_qty) + req.quantity
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Invalid quantity on food row')
+
+    # recompute stockLevel
+    if new_qty > 30:
+        new_stock = StockLevel.HIGH.value
+    elif new_qty >= 8:
+        new_stock = StockLevel.MEDIUM.value
+    elif new_qty >= 1:
+        new_stock = StockLevel.LOW.value
+    else:
+        new_stock = StockLevel.LOW.value
+
+    try:
+        food_update_resp = supabase.table('Food').update({'quantity': new_qty, 'stockLevel': new_stock}).eq('id', req.food_id).execute()
+    except Exception as e:
+        food_update_resp = {'error': str(e)}
+
+    return {'profile_update': profile_update_resp, 'food_update': food_update_resp}
+
+
+@app.get('/profiles/{profile_id}/reservations')
+async def get_profile_reservations(profile_id: str, request: Request):
+    """Return a list of reserved food ids for the profile and the food rows for those items."""
+    # If caller used the special `me` identifier, try to resolve from the Authorization header.
+    if profile_id in ("me", "self"):
+        token_user = _extract_user_id_from_request(request)
+        if token_user:
+            profile_id = token_user
+
+    try:
+        p_resp = supabase.table('profiles').select('reserved_items').eq('id', profile_id).single().execute()
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+    p_data = None
+    if isinstance(p_resp, dict):
+        p_data = p_resp.get('data')
+    else:
+        p_data = getattr(p_resp, 'data', None)
+
+    if not p_data:
+        return {'reserved_items': [], 'food_rows': []}
+
+    row = None
+    if isinstance(p_data, list) and len(p_data) > 0:
+        row = p_data[0]
+    elif isinstance(p_data, dict):
+        row = p_data
+
+    if not row:
+        return {'reserved_items': [], 'food_rows': []}
+
+    reserved = row.get('reserved_items') if isinstance(row, dict) else row['reserved_items']
+    if not reserved:
+        return {'reserved_items': [], 'food_rows': []}
+
+    # fetch food rows
+    try:
+        f_resp = supabase.table('Food').select('*').in_('id', reserved).execute()
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+    f_data = None
+    if isinstance(f_resp, dict):
+        f_data = f_resp.get('data')
+    else:
+        f_data = getattr(f_resp, 'data', None)
+
+    return {'reserved_items': reserved, 'food_rows': f_data or []}
 
 
 if __name__ == "__main__":
