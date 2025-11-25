@@ -109,21 +109,25 @@ export function CreateEventForm() {
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-red-600 mb-4">Create New Event</h1>
-        <p className="text-gray-600 text-lg">
+        <h1 className="text-3xl font-bold text-black mb-4 font-sans antialiased">
+          Create New Event
+        </h1>
+        <p className="text-black text-lg font-semibold font-sans antialiased">
           Share your leftover food with the BU community and help reduce waste
         </p>
       </div>
 
-      <Card className="border-gray-200 shadow-sm">
+      <Card className="border-gray-300 shadow-sm bg-white">
         <form onSubmit={handleSubmit} className="p-8 space-y-8">
           {/* Basic Information Section */}
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Event Information</h2>
+            <h2 className="text-xl font-bold text-black mb-6 font-sans antialiased">
+              Event Information
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Event Name */}
               <div className="md:col-span-2">
-                <Label htmlFor="name" className="mb-2 block font-medium">
+                <Label htmlFor="name" className="mb-2 block font-bold text-black font-sans antialiased">
                   Event Name *
                 </Label>
                 <Input
@@ -133,13 +137,13 @@ export function CreateEventForm() {
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                   required
-                  className="w-full"
+                  className="w-full font-sans antialiased text-black text-base border-gray-400"
                 />
               </div>
 
               {/* Description */}
               <div className="md:col-span-2">
-                <Label htmlFor="description" className="mb-2 block font-medium">
+                <Label htmlFor="description" className="mb-2 block font-bold text-black font-sans antialiased">
                   Description *
                 </Label>
                 <Textarea
@@ -149,16 +153,17 @@ export function CreateEventForm() {
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   required
                   rows={4}
+                  className="font-sans antialiased text-black text-base border-gray-400"
                 />
               </div>
 
               {/* Location */}
               <div>
-                <Label htmlFor="location" className="mb-2 block font-medium">
+                <Label htmlFor="location" className="mb-2 block font-bold text-black font-sans antialiased">
                   Location *
                 </Label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 w-4 h-4" />
                   <Input
                     id="location"
                     type="text"
@@ -166,60 +171,60 @@ export function CreateEventForm() {
                     value={formData.location}
                     onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
                     required
-                    className="pl-10"
+                    className="pl-10 font-sans antialiased text-black text-base border-gray-400"
                   />
                 </div>
               </div>
 
               {/* Date */}
               <div>
-                <Label htmlFor="date" className="mb-2 block font-medium">
+                <Label htmlFor="date" className="mb-2 block font-bold text-black font-sans antialiased">
                   Event Date *
                 </Label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 w-4 h-4" />
                   <Input
                     id="date"
                     type="date"
                     value={formData.date}
                     onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
                     required
-                    className="pl-10"
+                    className="pl-10 font-sans antialiased text-black text-base border-gray-400"
                   />
                 </div>
               </div>
 
               {/* Time */}
               <div>
-                <Label htmlFor="startTime" className="mb-2 block font-medium">
+                <Label htmlFor="startTime" className="mb-2 block font-bold text-black font-sans antialiased">
                   Start Time *
                 </Label>
                 <div className="relative">
-                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 w-4 h-4" />
                   <Input
                     id="startTime"
                     type="time"
                     value={formData.startTime}
                     onChange={(e) => setFormData(prev => ({ ...prev, startTime: e.target.value }))}
                     required
-                    className="pl-10"
+                    className="pl-10 font-sans antialiased text-black text-base border-gray-400"
                   />
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="endTime" className="mb-2 block font-medium">
+                <Label htmlFor="endTime" className="mb-2 block font-bold text-black font-sans antialiased">
                   End Time *
                 </Label>
                 <div className="relative">
-                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 w-4 h-4" />
                   <Input
                     id="endTime"
                     type="time"
                     value={formData.endTime}
                     onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
                     required
-                    className="pl-10"
+                    className="pl-10 font-sans antialiased text-black text-base border-gray-400"
                   />
                 </div>
               </div>
@@ -228,11 +233,15 @@ export function CreateEventForm() {
 
           {/* Food Information Section */}
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Food Details</h2>
+            <h2 className="text-xl font-bold text-black mb-6 font-sans antialiased">
+              Food Details
+            </h2>
             
             {/* Food Items */}
             <div className="mb-6">
-              <Label className="mb-3 block font-medium">Available Food Items *</Label>
+              <Label className="mb-3 block font-bold text-black font-sans antialiased">
+                Available Food Items *
+              </Label>
               <div className="flex gap-3 mb-3">
                 <Input
                   type="text"
@@ -240,9 +249,9 @@ export function CreateEventForm() {
                   value={newFoodItem}
                   onChange={(e) => setNewFoodItem(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddFoodItem())}
-                  className="flex-1"
+                  className="flex-1 font-sans antialiased text-black text-base border-gray-400"
                 />
-                <Button type="button" onClick={handleAddFoodItem} variant="outline">
+                <Button type="button" onClick={handleAddFoodItem} variant="outline" className="font-sans antialiased border-gray-400 text-black hover:bg-gray-100 font-semibold">
                   <Utensils className="w-4 h-4 mr-2" />
                   Add
                 </Button>
@@ -254,13 +263,13 @@ export function CreateEventForm() {
                   {formData.foodItems.map((item, index) => (
                     <div
                       key={index}
-                      className="flex items-center gap-2 bg-red-50 text-red-700 px-3 py-1 rounded-full text-sm"
+                      className="flex items-center gap-2 bg-red-100 text-red-900 px-3 py-1 rounded-full text-sm font-sans antialiased font-semibold"
                     >
                       <span>{item}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveFoodItem(item)}
-                        className="hover:text-red-900"
+                        className="hover:text-red-800 font-sans antialiased"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -272,7 +281,9 @@ export function CreateEventForm() {
 
             {/* Dietary Tags */}
             <div className="mb-6">
-              <Label className="mb-3 block font-medium">Dietary Information</Label>
+              <Label className="mb-3 block font-bold text-black font-sans antialiased">
+                Dietary Information
+              </Label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {dietaryOptions.map((diet) => (
                   <div key={diet.id} className="flex items-center space-x-2">
@@ -283,7 +294,7 @@ export function CreateEventForm() {
                         handleDietaryTagChange(diet.id, checked as boolean)
                       }
                     />
-                    <Label htmlFor={diet.id} className="cursor-pointer text-sm">
+                    <Label htmlFor={diet.id} className="cursor-pointer text-black font-semibold font-sans antialiased">
                       {diet.label}
                     </Label>
                   </div>
@@ -293,7 +304,7 @@ export function CreateEventForm() {
 
             {/* Total Portions */}
             <div>
-              <Label htmlFor="portions" className="mb-2 block font-medium">
+              <Label htmlFor="portions" className="mb-2 block font-bold text-black font-sans antialiased">
                 Estimated Total Portions
               </Label>
               <Select
@@ -302,12 +313,12 @@ export function CreateEventForm() {
                   setFormData(prev => ({ ...prev, totalPortions: parseInt(value) }))
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="font-sans antialiased text-black text-base border-gray-400">
                   <SelectValue placeholder="Select portion count" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="font-sans antialiased">
                   {[5, 10, 15, 20, 25, 30, 40, 50].map((num) => (
-                    <SelectItem key={num} value={num.toString()}>
+                    <SelectItem key={num} value={num.toString()} className="font-sans antialiased text-black">
                       {num} portions
                     </SelectItem>
                   ))}
@@ -318,16 +329,18 @@ export function CreateEventForm() {
 
           {/* Image Upload Section */}
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Event Image</h2>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <Label htmlFor="image" className="cursor-pointer">
-                <span className="text-red-600 font-semibold hover:text-red-700">
+            <h2 className="text-xl font-bold text-black mb-6 font-sans antialiased">
+              Event Image
+            </h2>
+            <div className="border-2 border-dashed border-gray-400 rounded-lg p-6 text-center bg-gray-50">
+              <Upload className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+              <Label htmlFor="image" className="cursor-pointer font-sans antialiased">
+                <span className="text-red-600 font-bold hover:text-red-700">
                   Click to upload
                 </span>
-                <span className="text-gray-600"> or drag and drop</span>
+                <span className="text-black font-semibold"> or drag and drop</span>
               </Label>
-              <p className="text-gray-500 text-sm mt-2">
+              <p className="text-black text-sm mt-2 font-sans antialiased font-semibold">
                 PNG, JPG, GIF up to 10MB
               </p>
               <Input
@@ -338,7 +351,7 @@ export function CreateEventForm() {
                 className="hidden"
               />
               {formData.image && (
-                <p className="text-green-600 text-sm mt-2">
+                <p className="text-green-800 text-sm mt-2 font-sans antialiased font-semibold">
                   Selected: {formData.image.name}
                 </p>
               )}
@@ -346,19 +359,20 @@ export function CreateEventForm() {
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
+          <div className="flex justify-end gap-4 pt-6 border-t border-gray-300">
             <Button
               type="button"
               variant="outline"
               onClick={() => router.back()}
               disabled={isSubmitting}
+              className="font-sans antialiased border-gray-400 text-black hover:bg-gray-100 font-semibold"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="min-w-32"
+              className="min-w-32 font-sans antialiased bg-red-600 hover:bg-red-700 text-white font-bold"
             >
               {isSubmitting ? 'Creating Event...' : 'Create Event'}
             </Button>
