@@ -279,7 +279,7 @@ export function CreateEventForm() {
               )}
             </div>
 
-            {/* Dietary Tags */}
+            {/* Dietary Tags - 修复复选框部分 */}
             <div className="mb-6">
               <Label className="mb-3 block font-bold text-black font-sans antialiased">
                 Dietary Information
@@ -290,11 +290,20 @@ export function CreateEventForm() {
                     <Checkbox
                       id={diet.id}
                       checked={formData.dietaryTags.includes(diet.id)}
-                      onCheckedChange={(checked) => 
-                        handleDietaryTagChange(diet.id, checked as boolean)
-                      }
+                      onCheckedChange={(checked) => {
+                        console.log('Checkbox changed:', diet.id, checked);
+                        handleDietaryTagChange(diet.id, checked as boolean);
+                      }}
+                      className="h-4 w-4 rounded border-gray-400 text-red-600 focus:ring-red-600"
                     />
-                    <Label htmlFor={diet.id} className="cursor-pointer text-black font-semibold font-sans antialiased">
+                    <Label 
+                      htmlFor={diet.id} 
+                      className="cursor-pointer text-black font-semibold font-sans antialiased select-none"
+                      onClick={() => {
+                        const newChecked = !formData.dietaryTags.includes(diet.id);
+                        handleDietaryTagChange(diet.id, newChecked);
+                      }}
+                    >
                       {diet.label}
                     </Label>
                   </div>
