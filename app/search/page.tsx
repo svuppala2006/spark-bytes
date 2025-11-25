@@ -7,7 +7,7 @@ import { CardGrid } from '../components/CardGrid';
 import { Button } from '../components/ui/button';
 import { Search, SlidersHorizontal, MapPin, Utensils } from 'lucide-react';
 import { getAllEvents, Event } from '@/lib/api';
-
+import { EventCard } from '../components/EventCard';
 // add same data structure with CardGrid
 const mockEvents = [
   {
