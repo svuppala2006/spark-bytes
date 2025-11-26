@@ -231,7 +231,6 @@ export default function ProfilePage() {
         
         {/* button */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
-          {/* <h2 className="text-lg font-semibold text-gray-900 mb-4">Actions</h2> */}
           <div className="flex flex-wrap gap-4">            
             <button
               onClick={async () => {

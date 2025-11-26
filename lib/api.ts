@@ -17,7 +17,7 @@ export interface Event {
 export interface FoodItem {
     id: number;
     name: string;
-    quantity: number;
+    quantity: number | null;
     stockLevel: 'low' | 'medium' | 'high';
     dietaryTags: string[];
     description: string;
@@ -27,6 +27,7 @@ export interface FoodItem {
 export interface ReserveRequest {
     food_id: number;
     quantity: number;
+    profile_id?: string;
 }
 
 /**
@@ -125,5 +126,64 @@ export async function reserveFood(request: ReserveRequest): Promise<boolean> {
     } catch (error) {
         console.error('Error reserving food:', error);
         throw error;
+    }
+}
+
+export async function cancelReservation(request: ReserveRequest): Promise<boolean> {
+    try {
+        const response = await fetch(`${API_BASE_URL}/reserve/cancel`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(request),
+        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`Failed to cancel reservation: ${errorData.detail || response.statusText}`);
+        }
+        return true;
+    } catch (error) {
+        console.error('Error cancelling reservation:', error);
+        throw error;
+    }
+}
+
+export async function getProfileReservations(profileId: string): Promise<{ reserved_items: any[]; food_rows: any[] }>{
+    try{
+        const response = await fetch(`${API_BASE_URL}/profiles/${encodeURIComponent(profileId)}/reservations`);
+        if(!response.ok){
+            throw new Error(`Failed to fetch profile reservations: ${response.statusText}`);
+        }
+        return await response.json();
+    }catch(err){
+        console.error('Error fetching profile reservations', err);
+        return { reserved_items: [], food_rows: [] };
+    }
+}
+
+/**
+ * Fetch food items for a specific event
+ */
+export async function getFoodByEvent(eventId: number | string): Promise<FoodItem[]> {
+    try {
+        const response = await fetch(`${API_BASE_URL}/events/${eventId}/food`);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch food for event ${eventId}: ${response.statusText}`);
+        }
+        const result = await response.json();
+        const rows = result.data || [];
+        // Normalize shape to our frontend FoodItem type
+        return rows.map((r: any) => ({
+            id: typeof r.id === 'string' ? r.id : String(r.id),
+            name: r.name,
+            // Preserve null/undefined as null so UI falls back to stockLevel when quantity unknown
+            quantity: (r.quantity !== undefined && r.quantity !== null) ? Number(r.quantity) : null,
+            stockLevel: r.stockLevel,
+            dietaryTags: r.dietaryTags || [],
+            description: r.description || '',
+            event_id: r.event_id,
+        }));
+    } catch (error) {
+        console.error('Error fetching food by event:', error);
+        return [];
     }
 }
