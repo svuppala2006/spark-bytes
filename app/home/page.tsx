@@ -72,7 +72,7 @@ export default function Page() {
             Our Mission!
           </h1>
           <p className="text-gray-600 text-lg mb-8 max-w-xl">
-            TerrierBytes connects Boston University students with leftover food from campus events.
+            Spark!Bytes connects Boston University students with leftover food from campus events.
             Save money, reduce waste, and join the community.
           </p>
           <div className="flex gap-4">
