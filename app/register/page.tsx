@@ -18,6 +18,11 @@ export default function Register() {
   );
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  
+  const isBUEmail = (email: string) => {
+    const trimmed = email.trim().toLowerCase();
+    return /^[^@\s]+@bu\.edu$/.test(trimmed);
+  };
 
   useEffect(() => {
     const newRole = params.get("role") == "organizer" ? "organizer" : "user"
@@ -29,6 +34,7 @@ export default function Register() {
     setMessage('');
     if (!email || !password) return setMessage('Email and password required');
     
+    if (!isBUEmail(email)) return setMessage('bu.edu address required');
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({
       email,

@@ -1,8 +1,33 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function Portal() {
+  const router = useRouter();
+
+  useEffect(() => {
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const userId = session.user.id;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .single();
+
+      if (profile?.role === "organizer") {
+        router.replace("/organizer");
+      } else {
+        router.replace("/dashboard");
+      }
+    })();
+  }, [router]);
+  
   return (
     <main className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white px-4">
       <div className="text-center space-y-6">
@@ -23,7 +48,7 @@ export default function Portal() {
             href="/register?role=organizer"
             className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg text-xl font-semibold transition"
           >
-            Organizer Registration
+            Event Organizer Registration
           </Link>
         </div>
 
