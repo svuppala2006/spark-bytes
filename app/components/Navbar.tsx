@@ -165,15 +165,20 @@ export default function Navbar() {
           <div className="flex items-center gap-3">
             {userEmail ? (
               <>
-                <div className="w-10 h-10 bg-red-600 rounded-full text-white flex items-center justify-center">
-                  <span className="font-semibold text-sm">
-                    {userEmail.charAt(0).toUpperCase()}
-                  </span>
-                </div>
+                <Link 
+                  href="/profile" 
+                  className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                >
+                  <div className="w-10 h-10 bg-red-600 rounded-full text-white flex items-center justify-center">
+                    <span className="font-semibold text-sm">
+                      {userEmail.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
 
-                <span className="hidden sm:block text-gray-700 font-medium">
-                  {userEmail}
-                </span>
+                  <span className="hidden sm:block text-gray-700 font-medium">
+                    {userEmail}
+                  </span>
+                </Link>
 
                 <button
                   onClick={handleLogout}
