@@ -46,7 +46,7 @@ export default function Register() {
       setMessage(error.message);
     } else {
       if (data.session) {
-        router.replace(role == "organizer" ? "/organizer" : "/dashboard");
+        router.replace("/home");
       } else {
         setMessage("Check your email to confirm, then sign in.");
       }
