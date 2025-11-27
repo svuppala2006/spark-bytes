@@ -20,11 +20,7 @@ export default function Portal() {
         .eq("id", userId)
         .single();
 
-      if (profile?.role === "organizer") {
-        router.replace("/organizer");
-      } else {
-        router.replace("/dashboard");
-      }
+      router.replace("/home")
     })();
   }, [router]);
   

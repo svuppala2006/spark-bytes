@@ -5,10 +5,20 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 
+type Role = "user" | "organizer" | null
+
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [role, setRole] = useState<Role>(null);
+  const [fullName, setFullName] = useState<string | null>(null);
+
+  function getInitials(name: string | null) {
+  if (!name) return "";
+  const parts = name.split(" ");
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+}
   
   const isActive = (path: string) => {
     if (path === '/') {
@@ -22,14 +32,50 @@ export default function Navbar() {
 
     async function loadUser() {
       const { data } = await supabase.auth.getUser();
-      if (mounted) setUserEmail(data?.user?.email ?? null);
+      if (!mounted) return;
+
+      const authUser = data?.user;
+      if (!authUser) {
+        setUserEmail(null);
+        setRole(null);
+        setFullName(null);
+        return;
+      }
+
+      setUserEmail(authUser.email ?? null);
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role, first_name, last_name")
+        .eq("id", authUser.id)
+        .single();
+      setRole((profile?.role as Role) ?? null);
+      setFullName(profile?.first_name && profile?.last_name ? `${profile.first_name} ${profile.last_name}` : null);
     }
 
     loadUser();
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUserEmail(session?.user?.email ?? null);
-    });
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (!session?.user) {
+          setUserEmail(null);
+          setRole(null);
+          setFullName(null);
+          return;
+        }
+
+        setUserEmail(session.user.email ?? null);
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role, first_name, last_name")
+          .eq("id", session.user.id)
+          .single();
+
+        setRole((profile?.role as Role) ?? null);
+      setFullName(profile?.first_name && profile?.last_name ? `${profile.first_name} ${profile.last_name}` : null);
+      }
+    );
 
     return () => {
       mounted = false;
@@ -40,6 +86,8 @@ export default function Navbar() {
   async function handleLogout() {
     await supabase.auth.signOut();
     setUserEmail(null);
+    setRole(null);
+    setFullName(null);
     router.replace("/portal");
   }
   
@@ -84,18 +132,6 @@ export default function Navbar() {
             </Link>
 
             <Link
-              href="/food"
-              className={`flex items-center gap-2 transition-colors ${
-                isActive("/food") ? "text-red-600" : "text-gray-700 hover:text-red-600"
-              }`}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zM3 7a1 1 0 000 2h7a1 1 0 100-2H3zM3 11a1 1 0 100 2h4a1 1 0 100-2H3zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z" />
-              </svg>
-              <span className="font-medium">Food</span>
-            </Link>
-
-            <Link
               href="/about"
               className={`flex items-center gap-2 transition-colors ${
                 isActive("/about") ? "text-red-600" : "text-gray-700 hover:text-red-600"
@@ -107,17 +143,19 @@ export default function Navbar() {
               <span className="font-medium">About</span>
             </Link>
 
-            <Link
-              href="/create-event"
-              className={`flex items-center gap-2 transition-colors ${
-                isActive('/create-event') ? 'text-red-600' : 'text-gray-700 hover:text-red-600'
-              }`}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-              </svg>
-              <span className="font-medium">Create Event</span>
-            </Link>
+            {role == "organizer" && (
+              <Link
+                href="/create-event"
+                className={`flex items-center gap-2 transition-colors ${
+                  isActive('/create-event') ? 'text-red-600' : 'text-gray-700 hover:text-red-600'
+                }`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                </svg>
+                <span className="font-medium">Create Event</span>
+              </Link>
+            )}
           </div>
 
           {/* User Profile Section */}
@@ -130,12 +168,12 @@ export default function Navbar() {
                 >
                   <div className="w-10 h-10 bg-red-600 rounded-full text-white flex items-center justify-center">
                     <span className="font-semibold text-sm">
-                      {userEmail.charAt(0).toUpperCase()}
+                      {getInitials(fullName)}
                     </span>
                   </div>
 
                   <span className="hidden sm:block text-gray-700 font-medium">
-                    {userEmail}
+                    {fullName ?? userEmail}
                   </span>
                 </Link>
 

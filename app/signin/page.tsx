@@ -36,7 +36,7 @@ export default function SignIn() {
         .single();
       if (profile?.role == "organizer") role = "organizer";
     }
-    router.replace(role == "organizer" ? "/organizer" : "/dashboard")
+    router.replace("/home")
     setLoading(false)
   }, [email, password, router])
 
