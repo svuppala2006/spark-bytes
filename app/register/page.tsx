@@ -9,10 +9,11 @@ export default function Register() {
   const router = useRouter();
   const params = useSearchParams();
 
-  const initialRole = params.get("role") === "organizer" ? "organizer" : "user";
-
   const [email, setEmail] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState<"user" | "organizer">(
     params.get("role") == "organizer" ? "organizer" : "user"
   );
@@ -32,14 +33,19 @@ export default function Register() {
   async function onRegister(e: React.FormEvent) {
     e.preventDefault();
     setMessage('');
-    if (!email || !password) return setMessage('Email and password required');
+    if (!firstName || !lastName || !email || !password || !confirmPassword) {
+      return setMessage("All fields are required.");
+    }
     
-    if (!isBUEmail(email)) return setMessage('bu.edu address required');
+    if (!isBUEmail(email)) return setMessage('bu.edu address required.');
+
+    if (password != confirmPassword) return setMessage("Passwords do not match.");
+
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { role } }
+      options: { data: { role, first_name: firstName, last_name: lastName } }
     });
 
     if (error) {
@@ -72,6 +78,22 @@ export default function Register() {
           {/* FORM */}
           <form onSubmit={onRegister} className="space-y-4">
             <input
+              type="text"
+              placeholder="First Name"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md placeholder-gray-500 text-gray-600"
+            />
+
+            <input
+              type="text"
+              placeholder="Last Name"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md placeholder-gray-500 text-gray-600"
+            />
+
+            <input
               type="email"
               placeholder="BU Email"
               value={email}
@@ -84,6 +106,14 @@ export default function Register() {
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md placeholder-gray-500 text-gray-600"
+            />
+
+            <input
+              type="password"
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full px-3 py-2 border rounded-md placeholder-gray-500 text-gray-600"
             />
 

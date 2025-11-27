@@ -12,6 +12,13 @@ export default function Navbar() {
   const router = useRouter();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [role, setRole] = useState<Role>(null);
+  const [fullName, setFullName] = useState<string | null>(null);
+
+  function getInitials(name: string | null) {
+  if (!name) return "";
+  const parts = name.split(" ");
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+}
   
   const isActive = (path: string) => {
     if (path === '/') {
@@ -31,6 +38,7 @@ export default function Navbar() {
       if (!authUser) {
         setUserEmail(null);
         setRole(null);
+        setFullName(null);
         return;
       }
 
@@ -38,10 +46,11 @@ export default function Navbar() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("role")
+        .select("role, first_name, last_name")
         .eq("id", authUser.id)
         .single();
       setRole((profile?.role as Role) ?? null);
+      setFullName(profile?.first_name && profile?.last_name ? `${profile.first_name} ${profile.last_name}` : null);
     }
 
     loadUser();
@@ -51,6 +60,7 @@ export default function Navbar() {
         if (!session?.user) {
           setUserEmail(null);
           setRole(null);
+          setFullName(null);
           return;
         }
 
@@ -58,11 +68,12 @@ export default function Navbar() {
 
         const { data: profile } = await supabase
           .from("profiles")
-          .select("role")
+          .select("role, first_name, last_name")
           .eq("id", session.user.id)
           .single();
 
         setRole((profile?.role as Role) ?? null);
+      setFullName(profile?.first_name && profile?.last_name ? `${profile.first_name} ${profile.last_name}` : null);
       }
     );
 
@@ -76,6 +87,7 @@ export default function Navbar() {
     await supabase.auth.signOut();
     setUserEmail(null);
     setRole(null);
+    setFullName(null);
     router.replace("/portal");
   }
   
@@ -156,12 +168,12 @@ export default function Navbar() {
                 >
                   <div className="w-10 h-10 bg-red-600 rounded-full text-white flex items-center justify-center">
                     <span className="font-semibold text-sm">
-                      {userEmail.charAt(0).toUpperCase()}
+                      {getInitials(fullName)}
                     </span>
                   </div>
 
                   <span className="hidden sm:block text-gray-700 font-medium">
-                    {userEmail}
+                    {fullName ?? userEmail}
                   </span>
                 </Link>
 
