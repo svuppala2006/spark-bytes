@@ -12,6 +12,7 @@ export interface Event {
     date: string; // YYYY-MM-DD
     start_time: string; // HH:MM
     end_time: string; // HH:MM
+    image_url?: string; // Public image URL from storage
 }
 
 export interface FoodItem {
@@ -41,7 +42,20 @@ export async function getAllEvents(): Promise<Event[]> {
         }
         const result = await response.json();
         // Supabase response structure: { data: [...], count: ... }
-        return result.data || [];
+        const rows = result.data || [];
+        // Normalize to ensure image_url is present when available
+        return rows.map((e: any) => ({
+            id: e.id,
+            name: e.name,
+            description: e.description,
+            organization: e.organization,
+            location: e.location,
+            food: e.food || [],
+            date: e.date,
+            start_time: e.start_time,
+            end_time: e.end_time,
+            image_url: e.image_url || e.image || undefined,
+        }));
     } catch (error) {
         console.error('Error fetching events:', error);
         return [];
