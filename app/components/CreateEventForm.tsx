@@ -7,7 +7,6 @@ import { Card } from './ui/card';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
 import { Checkbox } from './ui/checkbox';
 import { Calendar, Clock, MapPin, Utensils, Upload, X } from 'lucide-react';
@@ -19,7 +18,11 @@ interface EventFormData {
   date: string;
   startTime: string;
   endTime: string;
-  foodItems: string[];
+  foodItems: Array<{
+    name: string;
+    stockLevel?: string;
+    quantity?: number;
+  }>;
   dietaryTags: string[];
   totalPortions: number;
   image: File | null;
@@ -51,19 +54,22 @@ export function CreateEventForm() {
   ];
 
   const handleAddFoodItem = () => {
-    if (newFoodItem.trim() && !formData.foodItems.includes(newFoodItem.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        foodItems: [...prev.foodItems, newFoodItem.trim()]
-      }));
-      setNewFoodItem('');
+    if (newFoodItem.trim()) {
+      const foodItemExists = formData.foodItems.some(item => item.name === newFoodItem.trim());
+      if (!foodItemExists) {
+        setFormData(prev => ({
+          ...prev,
+          foodItems: [...prev.foodItems, { name: newFoodItem.trim(), stockLevel: 'medium' }]
+        }));
+        setNewFoodItem('');
+      }
     }
   };
 
-  const handleRemoveFoodItem = (itemToRemove: string) => {
+  const handleRemoveFoodItem = (itemName: string) => {
     setFormData(prev => ({
       ...prev,
-      foodItems: prev.foodItems.filter(item => item !== itemToRemove)
+      foodItems: prev.foodItems.filter(item => item.name !== itemName)
     }));
   };
 
@@ -87,19 +93,79 @@ export function CreateEventForm() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // TODO: Integrate with actual API endpoint
     try {
-      console.log('Submitting event data:', formData);
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+      // Build FormData for multipart submission
+      const formDataToSend = new FormData();
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('organization', formData.name);
+      formDataToSend.append('location', formData.location);
+      formDataToSend.append('date', formData.date);
+      formDataToSend.append('start_time', formData.startTime);
+      formDataToSend.append('end_time', formData.endTime);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Append food item names only (names will be used to create food records)
+      formDataToSend.append('food', JSON.stringify(formData.foodItems.map(item => item.name)));
       
-      // Redirect to events page or show success message
+      // Append image file if selected
+      if (formData.image) {
+        formDataToSend.append('image', formData.image);
+      }
+      
+      // Post event to backend
+      const eventResponse = await fetch(`${API_BASE_URL}/event/`, {
+        method: 'POST',
+        body: formDataToSend,
+      });
+      
+      if (!eventResponse.ok) {
+        const errorData = await eventResponse.json();
+        throw new Error(errorData.detail || 'Failed to create event');
+      }
+      
+      const eventResult = await eventResponse.json();
+      console.log('Event created successfully:', eventResult);
+      
+      // Extract event_id from response
+      let eventId = null;
+      if (eventResult.data && Array.isArray(eventResult.data) && eventResult.data.length > 0) {
+        eventId = eventResult.data[0].id;
+      }
+      
+      // If we have food items and an event_id, post the food items
+      if (eventId && formData.foodItems.length > 0) {
+        const foodItemsToPost = formData.foodItems.map(item => ({
+          name: item.name,
+          event_id: eventId,
+          stockLevel: item.stockLevel || 'medium',
+          quantity: item.quantity || null,
+          dietaryTags: formData.dietaryTags,
+        }));
+        
+        const foodResponse = await fetch(`${API_BASE_URL}/food/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(foodItemsToPost),
+        });
+        
+        if (!foodResponse.ok) {
+          const errorData = await foodResponse.json();
+          console.error('Failed to create food items:', errorData);
+          // Don't fail the whole operation if food items fail
+        } else {
+          console.log('Food items created successfully');
+        }
+      }
+      
       alert('Event created successfully!');
       router.push('/search');
     } catch (error) {
       console.error('Error creating event:', error);
-      alert('Failed to create event. Please try again.');
+      alert(`Failed to create event: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -265,10 +331,10 @@ export function CreateEventForm() {
                       key={index}
                       className="flex items-center gap-2 bg-red-100 text-red-900 px-3 py-1 rounded-full text-sm font-sans antialiased font-semibold"
                     >
-                      <span>{item}</span>
+                      <span>{item.name}</span>
                       <button
                         type="button"
-                        onClick={() => handleRemoveFoodItem(item)}
+                        onClick={() => handleRemoveFoodItem(item.name)}
                         className="hover:text-red-800 font-sans antialiased"
                       >
                         <X className="w-3 h-3" />
@@ -290,9 +356,9 @@ export function CreateEventForm() {
                     <Checkbox
                       id={diet.id}
                       checked={formData.dietaryTags.includes(diet.id)}
-                      onCheckedChange={(checked) => {
+                      onChange={(checked) => {
                         console.log('Checkbox changed:', diet.id, checked);
-                        handleDietaryTagChange(diet.id, checked as boolean);
+                        handleDietaryTagChange(diet.id, checked.target.checked as boolean);
                       }}
                       className="h-4 w-4 rounded border-gray-400 text-red-600 focus:ring-red-600"
                     />
@@ -316,23 +382,19 @@ export function CreateEventForm() {
               <Label htmlFor="portions" className="mb-2 block font-bold text-black font-sans antialiased">
                 Estimated Total Portions
               </Label>
-              <Select
+              <select
+                id="portions"
                 value={formData.totalPortions.toString()}
-                onValueChange={(value) => 
-                  setFormData(prev => ({ ...prev, totalPortions: parseInt(value) }))
-                }
+                onChange={(e) => setFormData(prev => ({ ...prev, totalPortions: parseInt(e.target.value) }))}
+                className="w-full px-3 py-2 border border-gray-400 rounded-md font-sans antialiased text-black text-base bg-white hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
               >
-                <SelectTrigger className="font-sans antialiased text-black text-base border-gray-400">
-                  <SelectValue placeholder="Select portion count" />
-                </SelectTrigger>
-                <SelectContent className="font-sans antialiased">
-                  {[5, 10, 15, 20, 25, 30, 40, 50].map((num) => (
-                    <SelectItem key={num} value={num.toString()} className="font-sans antialiased text-black">
-                      {num} portions
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <option value="">Select portion count</option>
+                {[5, 10, 15, 20, 25, 30, 40, 50].map((num) => (
+                  <option key={num} value={num.toString()}>
+                    {num} portions
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

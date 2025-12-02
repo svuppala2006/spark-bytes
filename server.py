@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, HTTPException, status, Request
+from fastapi import FastAPI, HTTPException, status, Request, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 import dotenv
 import uvicorn
@@ -7,6 +7,7 @@ from supabase import create_client, Client
 from pydantic import BaseModel, Field, field_validator, ValidationInfo
 from typing import Optional, List
 from enum import Enum
+import json
 
 # Create the FastAPI app early so middleware and routes can be added
 app = FastAPI()
@@ -24,6 +25,17 @@ class ReserveRequest(BaseModel):
     food_id: int
     quantity: int = Field(..., gt=0)
     profile_id: Optional[str] = None
+
+
+# Model for adding food items
+class FoodItem(BaseModel):
+    name: str
+    event_id: int
+    quantity: Optional[int] = None
+    stockLevel: Optional[str] = None
+    dietaryTags: Optional[List[str]] = None
+    description: Optional[str] = None
+    pickup_instructions: Optional[str] = None
 
 
 # Minimal Event model for the POST /event/ endpoint. Allow extra fields.
@@ -159,14 +171,108 @@ async def get_food_by_event(event_id: int):
     return {"data": data}
 
 @app.post("/event/")
-async def add_event(event: Event):
-    # Use the dict representation and exclude None values
-    payload = event.model_dump(exclude_none=True)
+async def add_event(
+    name: str = Form(...),
+    description: str = Form(...),
+    organization: str = Form(default=""),
+    location: str = Form(...),
+    date: str = Form(...),
+    start_time: str = Form(...),
+    end_time: str = Form(...),
+    food: str = Form(default="[]"),
+    image: Optional[UploadFile] = File(None)
+):
+    """
+    Create a new event with optional image upload.
+    - Uploads image to 'event_images' storage bucket if provided
+    - Stores the public image URL in events table
+    - Parses food as JSON array of food item names
+    """
     try:
+        # Parse food JSON
+        food_items = []
+        if food:
+            try:
+                food_items = json.loads(food)
+            except json.JSONDecodeError:
+                food_items = []
+        
+        image_url = None
+        
+        # Handle image upload if provided
+        if image and image.filename:
+            try:
+                # Read the file content
+                file_content = await image.read()
+                
+                # Upload to Supabase storage bucket 'event_images'
+                # Generate a unique filename
+                import uuid
+                unique_filename = f"{uuid.uuid4()}_{image.filename}"
+                
+                # Upload to storage
+                upload_response = supabase.storage.from_('event images').upload(
+                    path=unique_filename,
+                    file=file_content,
+                    file_options={"content-type": image.content_type}
+                )
+                
+                # Get the public URL
+                image_url = supabase.storage.from_('event images').get_public_url(unique_filename)
+                
+            except Exception as e:
+                # Log the error but don't fail the event creation
+                print(f"Error uploading image: {str(e)}")
+                image_url = None
+        
+        # Build event payload
+        payload = {
+            "name": name,
+            "description": description,
+            "organization": organization,
+            "location": location,
+            "date": date,
+            "start_time": start_time,
+            "end_time": end_time,
+            "food": food_items,
+        }
+        
+        # Add image_url if upload succeeded
+        if image_url:
+            payload["image_url"] = image_url
+        
+        # Insert event into database
         response = supabase.table('Events').insert(payload).execute()
+        return response
+        
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-    return response
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating event: {str(e)}"
+        )
+
+@app.post("/food/")
+async def add_food_items(food_items: List[FoodItem]):
+    """
+    Add multiple food items to the Food table.
+    Expects a list of food items, each with name, event_id, and optional quantity/stockLevel/dietaryTags/description/pickup_instructions.
+    """
+    try:
+        if not food_items or len(food_items) == 0:
+            return {"status": "no items to insert", "inserted": []}
+        
+        # Convert Pydantic models to dicts
+        items_to_insert = [item.model_dump(exclude_none=True) for item in food_items]
+        
+        # Insert all items
+        response = supabase.table('Food').insert(items_to_insert).execute()
+        return response
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error adding food items: {str(e)}"
+        )
 
 @app.put("/reserve/")
 async def reserve_item(reserve: ReserveRequest, request: Request):
@@ -319,13 +425,23 @@ async def reserve_item(reserve: ReserveRequest, request: Request):
     return {"food_update": update_resp, "profile_update": profile_update_resp}
 
 
+class FoodItem(BaseModel):
+    name: str
+    event_id: int
+    quantity: Optional[int] = None
+    stockLevel: Optional[str] = None
+    dietaryTags: Optional[List[str]] = None
+    description: Optional[str] = None
+    pickup_instructions: Optional[str] = None
+
+
 class CancelReserveRequest(BaseModel):
     food_id: int
     quantity: int = Field(..., gt=0)
     profile_id: Optional[str] = None
 
 
-@app.post("/reserve/cancel")
+@app.put("/reserve/")
 async def cancel_reservation(req: CancelReserveRequest, request: Request):
     """Cancel a reservation: remove food_id from profile.reserved_items and increment Food.quantity."""
     # First, remove from profile if provided
