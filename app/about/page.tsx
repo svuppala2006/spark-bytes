@@ -134,7 +134,7 @@ export default function AboutPage() {
 
       {/* Header Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-        <h1 className="text-5xl font-bold text-[#8C1515] mb-4">About TerrierBytes</h1>
+        <h1 className="text-5xl font-bold text-[#8C1515] mb-4">About Spark!Bytes</h1>
         <p className="text-xl text-gray-600 max-w-2xl mx-auto">Reducing food waste.</p>
       </div>
 
@@ -227,13 +227,6 @@ export default function AboutPage() {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="bg-[#8C1515] text-white py-8 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p>© 2025 TerrierBytes | Boston University</p>
-        </div>
-      </footer>
     </div>
   );
 }
