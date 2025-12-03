@@ -210,16 +210,19 @@ export default function SearchPage() {
 
               <div>
                 <label className="mb-3 block font-semibold text-gray-900">Location</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <input
-                    type="text"
-                    placeholder="Search location..."
-                    value={filters.location}
-                    onChange={(e) => handleFilterChange('location', e.target.value)}
-                    className="pl-10 border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+                <select
+                  value={filters.location}
+                  onChange={(e) => handleFilterChange('location', e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">All locations</option>
+                  <option value="West">West</option>
+                  <option value="East">East</option>
+                  <option value="Central">Central</option>
+                  <option value="South">South</option>
+                  <option value="Fenway">Fenway</option>
+                  <option value="Off-Campus">Off-Campus</option>
+                </select>
               </div>
 
               <div>
@@ -234,7 +237,7 @@ export default function SearchPage() {
                         onChange={() => handleDietaryChange(diet as keyof typeof filters.dietary)}
                         className="rounded text-blue-500 focus:ring-blue-500"
                       />
-                      <label htmlFor={diet} className="cursor-pointer text-sm capitalize">
+                      <label htmlFor={diet} className="cursor-pointer text-sm capitalize text-gray-900">
                         {diet.replace(/([A-Z])/g, ' $1')}
                       </label>
                     </div>

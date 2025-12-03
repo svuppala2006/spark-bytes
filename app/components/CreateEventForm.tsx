@@ -226,20 +226,23 @@ export function CreateEventForm() {
               {/* Location */}
               <div>
                 <Label htmlFor="location" className="mb-2 block font-bold text-black font-sans antialiased">
-                  Location *
+                  Campus Area *
                 </Label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 w-4 h-4" />
-                  <Input
-                    id="location"
-                    type="text"
-                    placeholder="e.g., Computer Science Building, Room 101"
-                    value={formData.location}
-                    onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                    required
-                    className="pl-10 font-sans antialiased text-black text-base border-gray-400"
-                  />
-                </div>
+                <select
+                  id="location"
+                  value={formData.location}
+                  onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                  required
+                  className="w-full border border-gray-400 rounded-md px-3 py-2 font-sans antialiased text-black text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select campus area</option>
+                  <option value="West">West</option>
+                  <option value="East">East</option>
+                  <option value="Central">Central</option>
+                  <option value="South">South</option>
+                  <option value="Fenway">Fenway</option>
+                  <option value="Off-Campus">Off-Campus</option>
+                </select>
               </div>
 
               {/* Date */}
