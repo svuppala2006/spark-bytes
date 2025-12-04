@@ -425,23 +425,13 @@ async def reserve_item(reserve: ReserveRequest, request: Request):
     return {"food_update": update_resp, "profile_update": profile_update_resp}
 
 
-class FoodItem(BaseModel):
-    name: str
-    event_id: int
-    quantity: Optional[int] = None
-    stockLevel: Optional[str] = None
-    dietaryTags: Optional[List[str]] = None
-    description: Optional[str] = None
-    pickup_instructions: Optional[str] = None
-
-
 class CancelReserveRequest(BaseModel):
     food_id: int
     quantity: int = Field(..., gt=0)
     profile_id: Optional[str] = None
 
 
-@app.put("/reserve/")
+@app.post("/reserve/cancel")
 async def cancel_reservation(req: CancelReserveRequest, request: Request):
     """Cancel a reservation: remove food_id from profile.reserved_items and increment Food.quantity."""
     # First, remove from profile if provided
@@ -553,7 +543,7 @@ async def get_profile_reservations(profile_id: str, request: Request):
             profile_id = token_user
 
     try:
-        p_resp = supabase.table('profiles').select('reserved_items').eq('id', profile_id).single().execute()
+        p_resp = supabase.table('profiles').select('reserved_items').eq('id', profile_id).execute()
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
