@@ -4,36 +4,47 @@ import { ArrowRight, Search, MapPin, Utensils, Leaf, Users, Calendar, TrendingUp
 import { useRouter } from "next/navigation";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
-import Image from "next/image";
+// import Image from "next/image";
 import { useEffect, useState } from "react";
-import { getAllEvents, Event } from "@/lib/api";
+import { getAllEvents, Event, getDashboardStats, DashboardStats } from "@/lib/api";
 
 export default function Page() {
   const router = useRouter();
   const [featuredEvents, setFeaturedEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loadingEvents, setLoadingEvents] = useState(true);
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchEvents() {
+    async function fetchData() {
       try {
-        const events = await getAllEvents();
+        const [events, dashboardStats] = await Promise.all([
+          getAllEvents(),
+          getDashboardStats()
+        ]);
+
         // Take first 3 events as featured
         setFeaturedEvents(events.slice(0, 3));
+        setStats(dashboardStats);
+        setError(null);
       } catch (error) {
-        console.error('Failed to load events:', error);
+        console.error('Failed to load data:', error);
+        setError('Failed to load dashboard data. Please try again later.');
       } finally {
-        setLoading(false);
+        setLoadingEvents(false);
+        setLoadingStats(false);
       }
     }
-    fetchEvents();
+    fetchData();
   }, []);
 
-  const stats = [
-    { label: 'Events Tracked', value: '50+', icon: Calendar },
-    { label: 'Food Items Saved', value: '1,300+', icon: Utensils },
-    { label: 'Active Users', value: '200+', icon: Users },
-    { label: 'Pounds Rescued', value: '1,200+', icon: TrendingUp },
-  ];
+  const statsDisplay = stats ? [
+    { label: 'Events Tracked', value: `${stats.total_events}+`, icon: Calendar },
+    { label: 'Food Items Saved', value: `${stats.total_food_saved.toLocaleString()}+`, icon: Utensils },
+    { label: 'Active Users', value: `${stats.active_users}+`, icon: Users },
+    { label: 'Pounds Rescued', value: `${stats.total_pounds_rescued.toLocaleString()}+`, icon: TrendingUp },
+  ] : [];
 
   const steps = [
     {
@@ -64,7 +75,6 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-
       {/* HERO */}
       <section className="bg-white border-b border-gray-200">
         <div className="max-w-5xl mx-auto px-8 py-24">
@@ -87,14 +97,39 @@ export default function Page() {
       </section>
 
       {/* STATS */}
-      <section className="max-w-6xl mx-auto px-8 py-16 grid grid-cols-1 md:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <Card key={index} className="p-6 shadow bg-white">
-            <stat.icon className="h-6 w-6 text-red-600 mb-2" />
-            <div className="text-xl font-semibold text-gray-900">{stat.value}</div>
-            <div className="text-gray-900">{stat.label}</div>
-          </Card>
-        ))}
+      <section className="max-w-6xl mx-auto px-8 py-16">
+        {error ? (
+          <div className="text-center py-8">
+            <p className="text-red-600 mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </div>
+        ) : loadingStats ? (
+          //loading state
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {Array(4).fill(0).map((_, index) => (
+              <Card key={index} className="p-6 shadow bg-white">
+                <div className="animate-pulse">
+                  <div className="h-6 w-6 bg-gray-300 rounded mb-2"></div>
+                  <div className="h-7 w-16 bg-gray-300 rounded mb-1"></div>
+                  <div className="h-5 w-20 bg-gray-300 rounded"></div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : stats ? (
+          //get stats
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {statsDisplay.map((stat, index) => (
+              <Card key={index} className="p-6 shadow bg-white">
+                <stat.icon className="h-6 w-6 text-red-600 mb-2" />
+                <div className="text-xl font-semibold text-gray-900">{stat.value}</div>
+                <div className="text-gray-900">{stat.label}</div>
+              </Card>
+            ))}
+          </div>
+        ) : null}
       </section>
 
       {/* HOW IT WORKS */}
@@ -118,7 +153,7 @@ export default function Page() {
         <div className="max-w-6xl mx-auto px-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-8">Featured Events</h2>
 
-          {loading ? (
+          {loadingEvents ? (
             <div className="text-center py-12">
               <p className="text-gray-600">Loading events...</p>
             </div>

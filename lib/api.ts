@@ -201,3 +201,31 @@ export async function getFoodByEvent(eventId: number | string): Promise<FoodItem
         return [];
     }
 }
+
+/**
+ * Home page
+ */
+export interface DashboardStats {
+  total_events: number;
+  total_food_saved: number;
+  active_users: number;
+  total_pounds_rescued: number;
+}
+
+/**
+ * Fetch dashboard statistics
+ */
+export async function getDashboardStats(): Promise<DashboardStats> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/stats`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch stats: ${response.statusText}`);
+    }
+    const result = await response.json();
+    
+    return result.data;
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    throw error;
+  }
+}
