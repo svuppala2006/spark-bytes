@@ -126,6 +126,7 @@
 // }
 // app/about/page.tsx
 import React from 'react';
+import Image from 'next/image';
 
 export default function AboutPage() {
   return (
@@ -198,32 +199,75 @@ export default function AboutPage() {
       {/* Meet the Team Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <h2 className="text-4xl font-bold text-[#8C1515] text-center mb-12">Meet the Team</h2>
-        <div className="flex justify-center space-x-8">
-          {/* Team Member 1 */}
+        <div className="flex justify-center flex-wrap gap-8">
+          {/* Richard */}
           <div className="bg-white rounded-2xl shadow-lg p-6 text-center w-64">
-            <div className="bg-gray-200 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-500 text-sm">
-              Profile Image
-            </div>
-            <h3 className="text-xl font-bold text-[#8C1515] mb-2">Team Member 1</h3>
+            <Image
+              src="/images/team/Richard.png"
+              alt="Richard"
+              width={96}
+              height={96}
+              className="rounded-full mx-auto mb-4 object-cover"
+              unoptimized
+            />
+            <h3 className="text-xl font-bold text-[#8C1515] mb-2">Richard</h3>
             <p className="text-gray-600">Developer</p>
           </div>
 
-          {/* Team Member 2 */}
+          {/* Shuwan */}
           <div className="bg-white rounded-2xl shadow-lg p-6 text-center w-64">
-            <div className="bg-gray-200 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-500 text-sm">
-              Profile Image
-            </div>
-            <h3 className="text-xl font-bold text-[#8C1515] mb-2">Team Member 2</h3>
-            <p className="text-gray-600">Designer</p>
+            <Image
+              src="/images/team/Shuwan.png"
+              alt="Shuwan"
+              width={96}
+              height={96}
+              className="rounded-full mx-auto mb-4 object-cover"
+              unoptimized
+            />
+            <h3 className="text-xl font-bold text-[#8C1515] mb-2">Shuwan</h3>
+            <p className="text-gray-600">Developer</p>
           </div>
 
-          {/* Team Member 3 */}
+          {/* Suhruth */}
           <div className="bg-white rounded-2xl shadow-lg p-6 text-center w-64">
-            <div className="bg-gray-200 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-500 text-sm">
-              Profile Image
-            </div>
-            <h3 className="text-xl font-bold text-[#8C1515] mb-2">Team Member 3</h3>
-            <p className="text-gray-600">Project Manager</p>
+            <Image
+              src="/images/team/Suhruth.png"
+              alt="Suhruth"
+              width={96}
+              height={96}
+              className="rounded-full mx-auto mb-4 object-cover"
+              unoptimized
+            />
+            <h3 className="text-xl font-bold text-[#8C1515] mb-2">Suhruth</h3>
+            <p className="text-gray-600">Developer</p>
+          </div>
+
+          {/* Thomas */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 text-center w-64">
+            <Image
+              src="/images/team/Thomas.png"
+              alt="Thomas"
+              width={96}
+              height={96}
+              className="rounded-full mx-auto mb-4 object-cover"
+              unoptimized
+            />
+            <h3 className="text-xl font-bold text-[#8C1515] mb-2">Thomas</h3>
+            <p className="text-gray-600">Developer</p>
+          </div>
+
+          {/* Yandu */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 text-center w-64">
+            <Image
+              src="/images/team/Yandu.png"
+              alt="Yandu"
+              width={96}
+              height={96}
+              className="rounded-full mx-auto mb-4 object-cover"
+              unoptimized
+            />
+            <h3 className="text-xl font-bold text-[#8C1515] mb-2">Yandu</h3>
+            <p className="text-gray-600">Developer</p>
           </div>
         </div>
       </div>
