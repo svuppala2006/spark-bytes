@@ -1,5 +1,5 @@
 // app/reserve/[eventId]/page.tsx
-import { ReserveFoodForm } from '../../../components/ReserveFoodForm';
+import { ReserveFoodForm } from '../../components/ReserveFoodForm';
 
 // 模拟事件数据 - 后续替换为真实API调用
 const getEventById = (id: string) => {
