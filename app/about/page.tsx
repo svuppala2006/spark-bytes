@@ -128,6 +128,32 @@
 import React from 'react';
 import Image from 'next/image';
 
+// LinkedIn Icon Component - Official style
+const LinkedInIcon = () => (
+  <svg
+    className="w-6 h-6"
+    viewBox="0 0 72 72"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Blue background rounded square */}
+    <rect width="72" height="72" rx="8" fill="#0A66C2"/>
+
+    {/* White "in" letters */}
+    {/* Letter "i" - dot */}
+    <circle cx="21" cy="21" r="5" fill="white"/>
+
+    {/* Letter "i" - vertical line */}
+    <rect x="16" y="30" width="10" height="28" rx="2" fill="white"/>
+
+    {/* Letter "n" */}
+    <path
+      d="M32 30h10v3.5c2-2.5 5-4 8.5-4 8.5 0 11.5 5.5 11.5 13V58H52V43.5c0-4-1.5-7.5-5.5-7.5S42 39 42 43.5V58H32V30z"
+      fill="white"
+    />
+  </svg>
+);
+
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-gray-50 pt-16"> {/* 添加 pt-16 来给全局navbar留出空间 */}
@@ -201,7 +227,15 @@ export default function AboutPage() {
         <h2 className="text-4xl font-bold text-[#8C1515] text-center mb-12">Meet the Team</h2>
         <div className="flex justify-center flex-wrap gap-8">
           {/* Richard */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 text-center w-64">
+          <a
+            href="https://www.linkedin.com/in/richardpilleul"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-white rounded-2xl shadow-lg p-6 text-center w-64 hover:shadow-xl hover:transform hover:-translate-y-1 transition-all cursor-pointer block relative"
+          >
+            <div className="absolute top-4 right-4">
+              <LinkedInIcon />
+            </div>
             <Image
               src="/images/team/Richard.png"
               alt="Richard"
@@ -212,7 +246,7 @@ export default function AboutPage() {
             />
             <h3 className="text-xl font-bold text-[#8C1515] mb-2">Richard</h3>
             <p className="text-gray-600">Developer</p>
-          </div>
+          </a>
 
           {/* Shuwan */}
           <div className="bg-white rounded-2xl shadow-lg p-6 text-center w-64">
@@ -229,7 +263,15 @@ export default function AboutPage() {
           </div>
 
           {/* Suhruth */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 text-center w-64">
+          <a
+            href="https://www.linkedin.com/in/suhruthvuppala"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-white rounded-2xl shadow-lg p-6 text-center w-64 hover:shadow-xl hover:transform hover:-translate-y-1 transition-all cursor-pointer block relative"
+          >
+            <div className="absolute top-4 right-4">
+              <LinkedInIcon />
+            </div>
             <Image
               src="/images/team/Suhruth.png"
               alt="Suhruth"
@@ -240,10 +282,18 @@ export default function AboutPage() {
             />
             <h3 className="text-xl font-bold text-[#8C1515] mb-2">Suhruth</h3>
             <p className="text-gray-600">Developer</p>
-          </div>
+          </a>
 
           {/* Thomas */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 text-center w-64">
+          <a
+            href="https://www.linkedin.com/in/thomas-idrobo"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-white rounded-2xl shadow-lg p-6 text-center w-64 hover:shadow-xl hover:transform hover:-translate-y-1 transition-all cursor-pointer block relative"
+          >
+            <div className="absolute top-4 right-4">
+              <LinkedInIcon />
+            </div>
             <Image
               src="/images/team/Thomas.png"
               alt="Thomas"
@@ -254,7 +304,7 @@ export default function AboutPage() {
             />
             <h3 className="text-xl font-bold text-[#8C1515] mb-2">Thomas</h3>
             <p className="text-gray-600">Developer</p>
-          </div>
+          </a>
 
           {/* Yandu */}
           <div className="bg-white rounded-2xl shadow-lg p-6 text-center w-64">
