@@ -307,7 +307,15 @@ export default function AboutPage() {
           </a>
 
           {/* Yandu */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 text-center w-64">
+          <a
+            href="http://www.linkedin.com/in/yanduge"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-white rounded-2xl shadow-lg p-6 text-center w-64 hover:shadow-xl hover:transform hover:-translate-y-1 transition-all cursor-pointer block relative"
+          >
+            <div className="absolute top-4 right-4">
+              <LinkedInIcon />
+            </div>
             <Image
               src="/images/team/Yandu.png"
               alt="Yandu"
@@ -318,7 +326,7 @@ export default function AboutPage() {
             />
             <h3 className="text-xl font-bold text-[#8C1515] mb-2">Yandu</h3>
             <p className="text-gray-600">Developer</p>
-          </div>
+          </a>
         </div>
       </div>
     </div>
