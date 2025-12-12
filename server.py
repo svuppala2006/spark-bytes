@@ -12,6 +12,37 @@ import json
 # Create the FastAPI app early so middleware and routes can be added
 app = FastAPI()
 
+# Get allowed origins from environment or use defaults
+ALLOWED_ORIGINS = [
+    "http://localhost:3000",           # Local development
+    "http://127.0.0.1:3000",           # Local development
+    "http://localhost:3001",           # Alternate local port
+]
+
+# Add production domains
+vercel_url = os.getenv("VERCEL_URL")
+if vercel_url:
+    ALLOWED_ORIGINS.append(f"https://{vercel_url}")
+
+# Allow all Vercel preview and production deployments
+ALLOWED_ORIGINS.extend([
+    "https://*.vercel.app",  # Vercel production domains
+])
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+dotenv.load_dotenv(dotenv_path='.env.local')
+
+# Support both NEXT_PUBLIC_ and regular env var names
+url: str = os.getenv("NEXT_PUBLIC_SUPABASE_URL") or os.getenv("SUPABASE_URL")
+key: str = os.getenv("NEXT_PUBLIC_SUPABASE_KEY") or os.getenv("SUPABASE_KEY")
+
 
 # Simple stock level enum used by the reserve/cancel logic
 class StockLevel(str, Enum):
@@ -45,18 +76,6 @@ class Event(BaseModel):
     date: Optional[str] = None
 
     model_config = {"extra": "allow"}
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # Next.js dev server
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-dotenv.load_dotenv(dotenv_path='.env.local')
-
-url: str = os.getenv("NEXT_PUBLIC_SUPABASE_URL")
-key: str = os.getenv("NEXT_PUBLIC_SUPABASE_KEY")
 
 if not url or not key:
     raise ValueError("SUPABASE_URL and SUPABASE_KEY must be set in .env.local file")
