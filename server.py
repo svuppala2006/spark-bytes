@@ -17,17 +17,13 @@ ALLOWED_ORIGINS = [
     "http://localhost:3000",           # Local development
     "http://127.0.0.1:3000",           # Local development
     "http://localhost:3001",           # Alternate local port
+    "https://spark-bytes-iota.vercel.app",  # Vercel production
 ]
 
 # Add production domains
 vercel_url = os.getenv("VERCEL_URL")
 if vercel_url:
     ALLOWED_ORIGINS.append(f"https://{vercel_url}")
-
-# Allow all Vercel preview and production deployments
-ALLOWED_ORIGINS.extend([
-    "https://*.vercel.app",  # Vercel production domains
-])
 
 app.add_middleware(
     CORSMiddleware,
