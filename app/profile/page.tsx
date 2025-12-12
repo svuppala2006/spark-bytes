@@ -126,8 +126,7 @@ export default function ProfilePage() {
               </span>
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">User Profile</h1>
-              <p className="text-gray-600">{user.email}</p>
+              <h1 className="text-2xl font-bold text-gray-900">{user.email}</h1>
               <div className="flex gap-4 mt-2 text-sm text-gray-500">
                 <span>{reservedEvents.length} events with reservations</span>
                 <span>{reservations.reserved_items.length} total food items reserved</span>

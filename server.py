@@ -584,5 +584,43 @@ async def get_profile_reservations(profile_id: str, request: Request):
     return {'reserved_items': reserved, 'food_rows': f_data or []}
 
 
+#statistics for home page
+@app.get("/stats")
+async def get_stats():
+    """
+    Calculate dashboard statistics from the database
+    """
+    try:
+        # Events Tracked 
+        events_resp = supabase.table('Events').select('*', count='exact').execute()
+        total_events = events_resp.count or 0
+        
+        # Food Items Saved
+        food_resp = supabase.table('Food').select('*', count='exact').execute()
+        total_food_items = food_resp.count or 0
+        
+        # Active Users
+        profiles_resp = supabase.table('profiles').select('*', count='exact').execute()
+        active_users = profiles_resp.count or 0
+        
+        # Pounds Rescued
+        total_pounds = total_food_items * 5
+        
+        stats = {
+            "total_events": total_events,
+            "total_food_saved": total_food_items,
+            "active_users": active_users,
+            "total_pounds_rescued": total_pounds
+        }
+        
+        return {"data": stats}
+        
+    except Exception as e:
+        print(f"Error calculating stats: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error calculating stats: {str(e)}"
+        )
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
