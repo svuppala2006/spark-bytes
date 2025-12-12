@@ -249,7 +249,15 @@ export default function AboutPage() {
           </a>
 
           {/* Shuwan */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 text-center w-64">
+          <a
+            href="https://www.linkedin.com/in/shuwan-zhao-9b6302293/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-white rounded-2xl shadow-lg p-6 text-center w-64 hover:shadow-xl hover:transform hover:-translate-y-1 transition-all cursor-pointer block relative"
+          >
+            <div className="absolute top-4 right-4">
+              <LinkedInIcon />
+            </div>
             <Image
               src="/images/team/Shuwan.png"
               alt="Shuwan"
@@ -260,7 +268,7 @@ export default function AboutPage() {
             />
             <h3 className="text-xl font-bold text-[#8C1515] mb-2">Shuwan</h3>
             <p className="text-gray-600">Developer</p>
-          </div>
+          </a>
 
           {/* Suhruth */}
           <a
