@@ -19,23 +19,30 @@ export default function SignIn() {
     setMessage('')
     if (!email || !password) return setMessage('Email and password required')
     setLoading(true)
+    console.log('Starting sign in...')
     const { error } = await supabase.auth.signInWithPassword({ email, password })
+    console.log('Auth response:', error || 'success')
     if (error) {
       setMessage(error.message)
       setLoading(false)
       return;
     }
+    console.log('Getting user...')
     const { data: auth } = await supabase.auth.getUser()
+    console.log('User data:', auth)
     const userId = auth?.user?.id
     let role: Role = "user";
     if (userId) {
+      console.log('Fetching profile for userId:', userId)
       const { data: profile } = await supabase
         .from("profiles")
         .select('role')
         .eq("id", userId)
         .single();
+      console.log('Profile data:', profile)
       if (profile?.role == "organizer") role = "organizer";
     }
+    console.log('Redirecting to /home')
     router.replace("/home")
     setLoading(false)
   }, [email, password, router])
