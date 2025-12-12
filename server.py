@@ -134,15 +134,109 @@ def _extract_user_id_from_request(request: Optional[Request]) -> Optional[str]:
 
 @app.get("/")
 async def root():
-    return supabase.table('Events').select('*').execute()
+    response = supabase.table('Events').select('*').execute()
+    data = getattr(response, 'data', None) or (response.get('data') if isinstance(response, dict) else None) or []
+    return {"data": data}
 
 @app.get("/search/name/{name}")
 async def search_by_name(name: str):
-    return supabase.table('Events').select('*').text_search("name", name, options={"config": "english"}).execute()
+    response = supabase.table('Events').select('*').text_search("name", name, options={"config": "english"}).execute()
+    data = getattr(response, 'data', None) or (response.get('data') if isinstance(response, dict) else None) or []
+    return {"data": data}
 
 @app.get("/search/food/{food}")
 async def search_by_food(food: str):
-    return supabase.table('Events').select('*').contains("food", [food]).execute()
+    response = supabase.table('Events').select('*').contains("food", [food]).execute()
+    data = getattr(response, 'data', None) or (response.get('data') if isinstance(response, dict) else None) or []
+    return {"data": data}
+
+
+@app.get("/search/dietary")
+async def search_by_dietary(tags: str = ""):
+    """
+    Search events by dietary tags.
+    Query parameter 'tags' should be comma-separated dietary tags (e.g., 'vegetarian,vegan')
+    Returns events that have at least one food item with any of the specified dietary tags.
+    """
+    print(f"\n[DEBUG] /search/dietary called with tags: '{tags}'")
+    
+    if not tags:
+        # If no tags specified, return all events
+        response = supabase.table('Events').select('*').execute()
+        data = getattr(response, 'data', None) or (response.get('data') if isinstance(response, dict) else None) or []
+        return {"data": data}
+    
+    try:
+        # Parse the tags from query string
+        tag_list = [tag.strip().lower() for tag in tags.split(',') if tag.strip()]
+        print(f"[DEBUG] Parsed tag_list: {tag_list}")
+        
+        if not tag_list:
+            response = supabase.table('Events').select('*').execute()
+            data = getattr(response, 'data', None) or (response.get('data') if isinstance(response, dict) else None) or []
+            return {"data": data}
+        
+        # Get all events
+        events_response = supabase.table('Events').select('*').execute()
+        events_data = getattr(events_response, 'data', None) or (events_response.get('data') if isinstance(events_response, dict) else None) or []
+        print(f"[DEBUG] Total events: {len(events_data)}")
+        
+        # Get all food items
+        food_response = supabase.table('Food').select('*').execute()
+        food_data = getattr(food_response, 'data', None) or (food_response.get('data') if isinstance(food_response, dict) else None) or []
+        print(f"[DEBUG] Total food items: {len(food_data)}")
+        
+        # Build a map of event_id to food items
+        event_food_map = {}
+        for food in food_data:
+            event_id = food.get('event_id')
+            if event_id not in event_food_map:
+                event_food_map[event_id] = []
+            event_food_map[event_id].append(food)
+            
+            # Debug: print each food item's dietary tags
+            dietary_tags = food.get('dietaryTags', []) or []
+            print(f"[DEBUG] Food '{food.get('name')}' (event_id={event_id}): dietaryTags = {dietary_tags} (type: {type(dietary_tags).__name__})")
+        
+        # Filter events that have food items with any of the specified dietary tags
+        filtered_events = []
+        for event in events_data:
+            event_id = event.get('id')
+            foods = event_food_map.get(event_id, [])
+            
+            print(f"[DEBUG] Processing event {event_id} '{event.get('name')}': has {len(foods)} food items")
+            
+            # Check if any food item has any of the selected dietary tags
+            has_matching_tag = False
+            for food in foods:
+                dietary_tags = food.get('dietaryTags', []) or []
+                
+                # Normalize dietary tags to lowercase for comparison
+                normalized_tags = []
+                if isinstance(dietary_tags, list):
+                    normalized_tags = [str(tag).lower() for tag in dietary_tags]
+                elif isinstance(dietary_tags, str):
+                    normalized_tags = [tag.strip().lower() for tag in dietary_tags.split(',')]
+                
+                print(f"[DEBUG]   Food '{food.get('name')}': normalized_tags={normalized_tags}, searching for {tag_list}")
+                
+                # Check if any of the search tags are in this food item's tags
+                if any(tag in normalized_tags for tag in tag_list):
+                    print(f"[DEBUG]   ✓ MATCH FOUND!")
+                    has_matching_tag = True
+                    break
+            
+            if has_matching_tag:
+                print(f"[DEBUG] Including event {event_id} in results")
+                filtered_events.append(event)
+        
+        print(f"[DEBUG] Final result: {len(filtered_events)} events")
+        return {"data": filtered_events}
+    except Exception as e:
+        print(f"Error in search_by_dietary: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @app.get("/events/{event_id}/food")
@@ -176,6 +270,7 @@ async def add_event(
     description: str = Form(...),
     organization: str = Form(default=""),
     location: str = Form(...),
+    campus_location: str = Form(default=""),
     date: str = Form(...),
     start_time: str = Form(...),
     end_time: str = Form(...),
@@ -231,6 +326,7 @@ async def add_event(
             "description": description,
             "organization": organization,
             "location": location,
+            "campus_location": campus_location,
             "date": date,
             "start_time": start_time,
             "end_time": end_time,

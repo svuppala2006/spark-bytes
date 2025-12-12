@@ -29,8 +29,11 @@ export default function EventDetailPage() {
   useEffect(() => {
     async function fetchEvent() {
       try {
+        console.log('Fetching event with ID:', eventId);
         const events = await getAllEvents();
+        console.log('All events fetched:', events);
         const foundEvent = events.find(e => e.id.toString() === eventId);
+        console.log('Found event:', foundEvent);
         setApiEvent(foundEvent || null);
         // Fetch food items for the event
         const idToUse = foundEvent ? foundEvent.id : Number(eventId);

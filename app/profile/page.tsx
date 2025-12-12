@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getProfileReservations, getAllEvents, Event } from '@/lib/api';
+import { useNotifications } from '@/lib/useNotifications';
 
 interface UserProfile {
   id: string;
@@ -23,6 +24,7 @@ export default function ProfilePage() {
   const [reservations, setReservations] = useState<ReservationData>({ reserved_items: [], food_rows: [] });
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { notificationsEnabled, toggleNotifications, loading: notifLoading } = useNotifications(user?.id || null);
 
   useEffect(() => {
     let mounted = true;
@@ -159,6 +161,26 @@ export default function ProfilePage() {
                   day: 'numeric'
                 })}
               </span>
+            </div>
+
+            <div className="flex justify-between items-center py-3 border-b border-gray-100">
+              <div>
+                <span className="text-gray-600 font-medium">Event Notifications</span>
+                <p className="text-sm text-gray-500 mt-1">Get notified when new events are created</p>
+              </div>
+              <button
+                onClick={() => toggleNotifications(!notificationsEnabled)}
+                disabled={notifLoading}
+                className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+                  notificationsEnabled ? 'bg-green-600' : 'bg-gray-300'
+                } ${notifLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              >
+                <span
+                  className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                    notificationsEnabled ? 'translate-x-7' : 'translate-x-1'
+                  }`}
+                />
+              </button>
             </div>
           </div>
         </div>

@@ -7,14 +7,29 @@ import { Card } from "../components/ui/card";
 // import Image from "next/image";
 import { useEffect, useState } from "react";
 import { getAllEvents, Event, getDashboardStats, DashboardStats } from "@/lib/api";
+import { supabase } from "@/lib/supabaseClient";
+import { useNotifications } from "@/lib/useNotifications";
+import { NotificationToast } from "../components/NotificationToast";
 
 export default function Page() {
   const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+  const { newEvent, setNewEvent } = useNotifications(user?.id || null);
   const [featuredEvents, setFeaturedEvents] = useState<Event[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loadingEvents, setLoadingEvents] = useState(true);
   const [loadingStats, setLoadingStats] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Get current user for notifications
+  useEffect(() => {
+    async function getUser() {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      setUser(authUser);
+      console.log('[HomePage] User loaded:', authUser?.id);
+    }
+    getUser();
+  }, []);
 
   useEffect(() => {
     async function fetchData() {
@@ -75,6 +90,7 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <NotificationToast notification={newEvent} onDismiss={() => setNewEvent(null)} />
       {/* HERO */}
       <section className="bg-white border-b border-gray-200">
         <div className="max-w-5xl mx-auto px-8 py-24">
