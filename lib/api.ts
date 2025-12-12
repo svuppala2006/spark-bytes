@@ -8,6 +8,7 @@ export interface Event {
     description: string;
     organization: string;
     location: string;
+    campus_location?: string; // Campus location: West, East, Central, South, Fenway, Off-Campus
     food: string[];
     date: string; // YYYY-MM-DD
     start_time: string; // HH:MM
@@ -41,21 +42,25 @@ export async function getAllEvents(): Promise<Event[]> {
             throw new Error(`Failed to fetch events: ${response.statusText}`);
         }
         const result = await response.json();
+        console.log('getAllEvents result:', result);
         // Supabase response structure: { data: [...], count: ... }
         const rows = result.data || [];
         // Normalize to ensure image_url is present when available
-        return rows.map((e: any) => ({
+        const events = rows.map((e: any) => ({
             id: e.id,
             name: e.name,
             description: e.description,
             organization: e.organization,
             location: e.location,
+            campus_location: e.campus_location,
             food: e.food || [],
             date: e.date,
             start_time: e.start_time,
             end_time: e.end_time,
             image_url: e.image_url || e.image || undefined,
         }));
+        console.log('Mapped events:', events);
+        return events;
     } catch (error) {
         console.error('Error fetching events:', error);
         return [];

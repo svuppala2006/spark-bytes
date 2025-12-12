@@ -9,58 +9,6 @@ import { Search, SlidersHorizontal, MapPin, Utensils } from 'lucide-react';
 import { getAllEvents, Event } from '@/lib/api';
 import { EventCard } from '../components/EventCard';
 // add same data structure with CardGrid
-const mockEvents = [
-  {
-    id: 1,
-    name: "CS Department Social",
-    description: "Join us for a networking event with professors and students. Leftover pizza, drinks, and snacks available!",
-    location: "Computer Science Building, Room 101",
-    food: ["Pizza", "Soda", "Chips"],
-    foodType: "Pizza, Soda, Chips",
-    image: "https://images.unsplash.com/photo-1606066889831-35fad6fa6ff6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaXp6YSUyMHBhcnR5fGVufDF8fHx8MTc2MTY2OTMzMnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    date: "2024-11-15",
-    distance: "0.3",
-    diet: ["vegetarian"]
-  },
-  {
-    id: 2,
-    name: "Business Conference",
-    description: "Annual BU business conference with keynote speakers. Catered lunch leftovers available for pickup.",
-    location: "Questrom School of Business",
-    food: ["Sandwiches", "Salad", "Fruit", "Cookies"],
-    foodType: "Sandwiches, Salad, Fruit, Cookies",
-    image: "https://images.unsplash.com/photo-1746364062975-7dd2509212fe?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidWZmZXQlMjBjYXRlcmluZ3xlbnwxfHx8fDE3NjE3NzM3MjV8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    date: "2024-11-16",
-    distance: "0.5",
-    diet: ["vegetarian", "vegan"]
-  },
-  {
-    id: 3,
-    name: "Student Networking Mixer",
-    description: "Meet fellow students and alumni at this networking event. Appetizers and refreshments provided.",
-    location: "George Sherman Union",
-    food: ["Appetizers", "Wine", "Cheese"],
-    foodType: "Appetizers, Wine, Cheese",
-    image: "https://images.unsplash.com/photo-1550305080-4e029753abcf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdHVkZW50JTIwbmV0d29ya2luZ3xlbnwxfHx8fDE3NjE3NzM3MjV8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    date: "2024-11-17",
-    distance: "0.2",
-    diet: ["vegetarian"]
-  },
-
-  // add more events to show pages
-  ...Array.from({ length: 20 }).map((_, i) => ({
-    id: i + 4,
-    name: `Campus Event ${i + 1}`,
-    description: `This is a sample campus event description for testing purposes.`,
-    location: `BU ${['West Campus', 'East Campus', 'Central Campus', 'South Campus'][i % 4]}`,
-    food: [["Pizza", "Burgers"][i % 2], "Salad", "Drinks"],
-    foodType: [["Pizza", "Burgers"][i % 2], "Salad", "Drinks"].join(", "),
-    image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=250&fit=crop",
-    date: `2024-11-${18 + (i % 10)}`,
-    distance: (0.1 + (i * 0.1)).toFixed(1),
-    diet: i % 3 === 0 ? ["vegetarian"] : i % 3 === 1 ? ["vegan"] : []
-  }))
-];
 
 function Pagination({ currentPage, totalPages, onPageChange }: { currentPage: number; totalPages: number; onPageChange: (page: number) => void }) {
   return (
@@ -87,31 +35,95 @@ export default function SearchPage() {
   const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    distance: '',
-    foodType: '',
-    dietary: { vegetarian: false, vegan: false, glutenFree: false },
-    location: '',
+    dietary: { 
+      vegetarian: false, 
+      vegan: false, 
+      'gluten-free': false,
+      'dairy-free': false,
+      'nut-free': false
+    },
+    campusLocation: '',
   });
 
   useEffect(() => {
     async function fetchEvents() {
       try {
-        const events = await getAllEvents();
-        setAllEvents(events);
+        const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        
+        // Check if dietary tags are selected
+        const selectedDietaryTags = Object.entries(filters.dietary)
+          .filter(([_, selected]) => selected)
+          .map(([tag, _]) => tag);
+        
+        let events: Event[] = [];
+        let url = '';
+        
+        if (selectedDietaryTags.length > 0) {
+          // Fetch events filtered by dietary tags from backend
+          const dietaryTagsParam = selectedDietaryTags.join(',');
+          url = `${API_BASE_URL}/search/dietary?tags=${encodeURIComponent(dietaryTagsParam)}`;
+          console.log('Fetching with dietary tags:', dietaryTagsParam, 'URL:', url);
+          const response = await fetch(url);
+          if (response.ok) {
+            const result = await response.json();
+            console.log('Dietary filter result:', result);
+            events = result.data || [];
+          } else {
+            console.error('Dietary filter response not ok:', response.status, response.statusText);
+            events = [];
+          }
+        } else {
+          // Fetch all events
+          url = `${API_BASE_URL}/`;
+          console.log('Fetching all events from:', url);
+          const response = await fetch(url);
+          if (response.ok) {
+            const result = await response.json();
+            console.log('All events result:', result);
+            events = result.data || [];
+          } else {
+            console.error('All events response not ok:', response.status);
+            events = [];
+          }
+        }
+        
+        console.log('Events fetched:', events.length, events);
+        
+        // Map the response to ensure campus_location is included
+        const mappedEvents = events.map((e: any) => ({
+          id: e.id,
+          name: e.name,
+          description: e.description,
+          organization: e.organization,
+          location: e.location,
+          campus_location: e.campus_location,
+          food: e.food || [],
+          date: e.date,
+          start_time: e.start_time,
+          end_time: e.end_time,
+          image_url: e.image_url || e.image || undefined,
+        }));
+        
+        console.log('Mapped events:', mappedEvents.length);
+        setAllEvents(mappedEvents);
       } catch (error) {
         console.error('Failed to load events:', error);
-        // Fallback to mock data if API fails
         setAllEvents([]);
       } finally {
         setLoading(false);
       }
     }
     fetchEvents();
-  }, []);
+  }, [filters.dietary]);
 
   const eventsPerPage = 12;
 
   const filteredEvents = useMemo(() => {
+    // Get selected dietary tags
+    const selectedDietaryTags = Object.entries(filters.dietary)
+      .filter(([_, selected]) => selected)
+      .map(([tag, _]) => tag);
+    
     return allEvents.filter(event => {
       const matchesSearch =
         searchQuery === '' ||
@@ -120,23 +132,18 @@ export default function SearchPage() {
         event.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
         event.food.some((food: string) => food.toLowerCase().includes(searchQuery.toLowerCase()));
       
-      // Distance filtering removed (not in API data)
-      const matchesDistance = true;
+      const matchesCampusLocation =
+        filters.campusLocation === '' ||
+        event.campus_location === filters.campusLocation;
       
-      const matchesFoodType =
-        filters.foodType === '' ||
-        event.food.some((food: string) => food.toLowerCase().includes(filters.foodType.toLowerCase()));
-      
-      // Dietary filtering removed (not in Event model, would need Food items)
+      // If no dietary tags selected, all events match
+      // If dietary tags are selected, we rely on backend filtering
+      // The filtering by dietary tags happens via the API call below
       const matchesDietary = true;
       
-      const matchesLocation =
-        filters.location === '' ||
-        event.location.toLowerCase().includes(filters.location.toLowerCase());
-      
-      return matchesSearch && matchesDistance && matchesFoodType && matchesDietary && matchesLocation;
+      return matchesSearch && matchesCampusLocation && matchesDietary;
     });
-  }, [searchQuery, filters, allEvents]);
+  }, [searchQuery, filters.campusLocation, allEvents]);
 
   const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
   const startIndex = (currentPage - 1) * eventsPerPage;
@@ -147,8 +154,14 @@ export default function SearchPage() {
     setCurrentPage(1);
   };
 
-  const handleDietaryChange = (diet: keyof typeof filters.dietary) => {
-    setFilters(prev => ({ ...prev, dietary: { ...prev.dietary, [diet]: !prev.dietary[diet] } }));
+  const handleDietaryChange = (diet: string) => {
+    setFilters(prev => ({ 
+      ...prev, 
+      dietary: { 
+        ...prev.dietary, 
+        [diet]: !prev.dietary[diet as keyof typeof prev.dietary] 
+      } 
+    }));
     setCurrentPage(1);
   };
 
@@ -177,42 +190,12 @@ export default function SearchPage() {
 
         {showFilters && (
           <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="mb-3 block font-semibold text-gray-900">Distance</label>
+                <label className="mb-3 block font-semibold text-gray-900">Campus Location</label>
                 <select
-                  value={filters.distance}
-                  onChange={(e) => handleFilterChange('distance', e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Any distance</option>
-                  <option value="0.5">Within 0.5 mi</option>
-                  <option value="1">Within 1 mi</option>
-                  <option value="2">Within 2 mi</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-3 block font-semibold text-gray-900">Food Type</label>
-                <select
-                  value={filters.foodType}
-                  onChange={(e) => handleFilterChange('foodType', e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">All food types</option>
-                  <option value="pizza">Pizza</option>
-                  <option value="sandwich">Sandwiches</option>
-                  <option value="salad">Salad</option>
-                  <option value="dessert">Desserts</option>
-                  <option value="beverage">Beverages</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-3 block font-semibold text-gray-900">Location</label>
-                <select
-                  value={filters.location}
-                  onChange={(e) => handleFilterChange('location', e.target.value)}
+                  value={filters.campusLocation}
+                  onChange={(e) => handleFilterChange('campusLocation', e.target.value)}
                   className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All locations</option>
@@ -228,17 +211,17 @@ export default function SearchPage() {
               <div>
                 <label className="mb-3 block font-semibold text-gray-900">Dietary Preferences</label>
                 <div className="space-y-2">
-                  {['vegetarian', 'vegan', 'glutenFree'].map(diet => (
+                  {Object.keys(filters.dietary).map(diet => (
                     <div key={diet} className="flex items-center space-x-2">
                       <input
                         type="checkbox"
                         id={diet}
                         checked={filters.dietary[diet as keyof typeof filters.dietary]}
-                        onChange={() => handleDietaryChange(diet as keyof typeof filters.dietary)}
+                        onChange={() => handleDietaryChange(diet)}
                         className="rounded text-blue-500 focus:ring-blue-500"
                       />
                       <label htmlFor={diet} className="cursor-pointer text-sm capitalize text-gray-900">
-                        {diet.replace(/([A-Z])/g, ' $1')}
+                        {diet.replace(/-/g, ' ')}
                       </label>
                     </div>
                   ))}
@@ -251,10 +234,14 @@ export default function SearchPage() {
                 variant="outline"
                 onClick={() => {
                   setFilters({ 
-                    distance: '', 
-                    foodType: '', 
-                    dietary: { vegetarian: false, vegan: false, glutenFree: false }, 
-                    location: '' 
+                    dietary: { 
+                      vegetarian: false, 
+                      vegan: false, 
+                      'gluten-free': false,
+                      'dairy-free': false,
+                      'nut-free': false
+                    }, 
+                    campusLocation: '' 
                   });
                 }}
               >

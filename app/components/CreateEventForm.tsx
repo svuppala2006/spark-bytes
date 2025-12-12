@@ -15,6 +15,7 @@ interface EventFormData {
   name: string;
   description: string;
   location: string;
+  address: string;
   date: string;
   startTime: string;
   endTime: string;
@@ -36,6 +37,7 @@ export function CreateEventForm() {
     name: '',
     description: '',
     location: '',
+    address: '',
     date: '',
     startTime: '',
     endTime: '',
@@ -101,7 +103,8 @@ export function CreateEventForm() {
       formDataToSend.append('name', formData.name);
       formDataToSend.append('description', formData.description);
       formDataToSend.append('organization', formData.name);
-      formDataToSend.append('location', formData.location);
+      formDataToSend.append('location', formData.address);
+      formDataToSend.append('campus_location', formData.location);
       formDataToSend.append('date', formData.date);
       formDataToSend.append('start_time', formData.startTime);
       formDataToSend.append('end_time', formData.endTime);
@@ -243,6 +246,22 @@ export function CreateEventForm() {
                   <option value="Fenway">Fenway</option>
                   <option value="Off-Campus">Off-Campus</option>
                 </select>
+              </div>
+
+              {/* Address */}
+              <div className="md:col-span-2">
+                <Label htmlFor="address" className="mb-2 block font-bold text-black font-sans antialiased">
+                  Physical Address / Building *
+                </Label>
+                <Input
+                  id="address"
+                  type="text"
+                  placeholder="e.g., George Sherman Union, 775 Commonwealth Ave"
+                  value={formData.address}
+                  onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                  required
+                  className="w-full font-sans antialiased text-black text-base border-gray-400"
+                />
               </div>
 
               {/* Date */}
