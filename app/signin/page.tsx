@@ -14,35 +14,36 @@ export default function SignIn() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
 
+  // Log environment variables on mount
+  React.useEffect(() => {
+    console.log('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+    console.log('NEXT_PUBLIC_SUPABASE_KEY exists:', !!process.env.NEXT_PUBLIC_SUPABASE_KEY)
+    console.log('NEXT_PUBLIC_SUPABASE_KEY length:', process.env.NEXT_PUBLIC_SUPABASE_KEY?.length)
+    console.log('NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL)
+  }, [])
+
   const onSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     setMessage('')
     if (!email || !password) return setMessage('Email and password required')
     setLoading(true)
-    console.log('Starting sign in...')
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    console.log('Auth response:', error || 'success')
     if (error) {
       setMessage(error.message)
       setLoading(false)
       return;
     }
-    console.log('Getting user...')
     const { data: auth } = await supabase.auth.getUser()
-    console.log('User data:', auth)
     const userId = auth?.user?.id
     let role: Role = "user";
     if (userId) {
-      console.log('Fetching profile for userId:', userId)
       const { data: profile } = await supabase
         .from("profiles")
         .select('role')
         .eq("id", userId)
         .single();
-      console.log('Profile data:', profile)
       if (profile?.role == "organizer") role = "organizer";
     }
-    console.log('Redirecting to /home')
     router.replace("/home")
     setLoading(false)
   }, [email, password, router])
