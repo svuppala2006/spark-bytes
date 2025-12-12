@@ -2,9 +2,9 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
-import { ImageWithFallback } from './ImageWithFallback';
 import { MapPin, Clock, Utensils } from 'lucide-react';
 
 interface EventCardProps {
@@ -38,12 +38,11 @@ export function EventCard({
     <Card className="overflow-hidden border-gray-300 hover:shadow-lg transition-shadow duration-300">
       {/* Event Image */}
       <div className="relative h-48">
-        <ImageWithFallback
-          src={image}
+        <Image
+          src={image || '/next.svg'}
           alt={name}
           fill
           className="object-cover"
-          fallback="/next.svg"
         />
       </div>
 
